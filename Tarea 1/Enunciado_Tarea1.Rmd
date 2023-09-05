@@ -11,8 +11,8 @@ output:
 <center><strong>CC6104: Statistical Thinking</strong></center>
 #### **Integrantes :** 
 
-- Alumno 1
-- Alumno 2
+- Nicolás Acevedo
+- Diego Navarrete
 
 #### **Cuerpo Docente:**
 
@@ -100,18 +100,125 @@ Pruebe el teorema central del limite aplicando un muestreo de la media en las di
 
 **Respuesta**
 
-```{r eval=FALSE}
+```{r}
 # Definición de variables o estructuras necesarias para el muestreo.
-n <- 1000
+# Primero definimos la función plot_gauss, que nos permitirá graficar rápidamente.
+plot_gauss <- function(x, name) {
+  avg <- mean(x)
+  std <- sd(x)
+  x_axis <- seq(min(x), max(x), length = length(x))
+  y_axis <- dnorm(x_axis, mean = avg, sd = std)
+  hist(x, main = sprintf("Gráfico de la distribución %s", name))
+  lines(x_axis, y_axis, type = "l", col = "red")
+}
+
+# Representamos las distribuciones Normal, Gamma y de Poisson, de parámetros N(1.5, 0.75), G(2, 1.5) y P(5).
+avg <- 1.5
+std <- 0.75
+shape <- 2
+scale <- 1.5
+lambda <- 5
+
+# Inicializamos los vectores que acumularán las medias para cada muestreo.
+iter <- 1000
+normal_vector <- vector(length = iter)
+gamma_vector <- vector(length = iter)
+poisson_vector <- vector(length = iter)
+```
+
+```{r fig.width=12}
+# Graficamos las 3 distribuciones para distintos tamaños de la muestra
+sample_size <- 10
 
 # Realizar el muestreo de las distribuciones.
-for(i in 1:n) {
+for(i in 1:iter) {
+  new_vector <- rnorm(n = sample_size, mean = avg, sd = std)
+  normal_vector[i] <- mean(new_vector)
   
+  new_vector <- rgamma(n = sample_size, shape = shape, scale = scale)
+  gamma_vector[i] <- mean(new_vector)
+
+  new_vector <- rpois(n = sample_size, lambda = lambda)
+  poisson_vector[i] <- mean(new_vector)
 }
 
 # Código para gráficos
+par(mfrow = c(1, 3))
+plot_gauss(normal_vector, sprintf("Normal con tamaño %s", sample_size))
+plot_gauss(gamma_vector, sprintf("Gamma con tamaño %s", sample_size))
+plot_gauss(poisson_vector, sprintf("de Poisson con tamaño %s", sample_size))
 ```
 
+```{r fig.width=12}
+# Graficamos las 3 distribuciones para distintos tamaños de la muestra
+sample_size <- 100
+
+# Realizar el muestreo de las distribuciones.
+for(i in 1:iter) {
+  new_vector <- rnorm(n = sample_size, mean = avg, sd = std)
+  normal_vector[i] <- mean(new_vector)
+  
+  new_vector <- rgamma(n = sample_size, shape = shape, scale = scale)
+  gamma_vector[i] <- mean(new_vector)
+
+  new_vector <- rpois(n = sample_size, lambda = lambda)
+  poisson_vector[i] <- mean(new_vector)
+}
+
+# Código para gráficos
+par(mfrow = c(1, 3))
+plot_gauss(normal_vector, sprintf("Normal con tamaño %s", sample_size))
+plot_gauss(gamma_vector, sprintf("Gamma con tamaño %s", sample_size))
+plot_gauss(poisson_vector, sprintf("de Poisson con tamaño %s", sample_size))
+```
+
+```{r fig.width=12}
+# Graficamos las 3 distribuciones para distintos tamaños de la muestra
+sample_size <- 1000
+
+# Realizar el muestreo de las distribuciones.
+for(i in 1:iter) {
+  new_vector <- rnorm(n = sample_size, mean = avg, sd = std)
+  normal_vector[i] <- mean(new_vector)
+  
+  new_vector <- rgamma(n = sample_size, shape = shape, scale = scale)
+  gamma_vector[i] <- mean(new_vector)
+
+  new_vector <- rpois(n = sample_size, lambda = lambda)
+  poisson_vector[i] <- mean(new_vector)
+}
+
+# Código para gráficos
+par(mfrow = c(1, 3))
+plot_gauss(normal_vector, sprintf("Normal con tamaño %s", sample_size))
+plot_gauss(gamma_vector, sprintf("Gamma con tamaño %s", sample_size))
+plot_gauss(poisson_vector, sprintf("de Poisson con tamaño %s", sample_size))
+```
+
+```{r fig.width=12}
+# Graficamos las 3 distribuciones para distintos tamaños de la muestra
+sample_size <- 5000
+
+# Realizar el muestreo de las distribuciones.
+for(i in 1:iter) {
+  new_vector <- rnorm(n = sample_size, mean = avg, sd = std)
+  normal_vector[i] <- mean(new_vector)
+  
+  new_vector <- rgamma(n = sample_size, shape = shape, scale = scale)
+  gamma_vector[i] <- mean(new_vector)
+
+  new_vector <- rpois(n = sample_size, lambda = lambda)
+  poisson_vector[i] <- mean(new_vector)
+}
+
+# Código para gráficos
+par(mfrow = c(1, 3))
+plot_gauss(normal_vector, sprintf("Normal con tamaño %s", sample_size))
+plot_gauss(gamma_vector, sprintf("Gamma con tamaño %s", sample_size))
+plot_gauss(poisson_vector, sprintf("de Poisson con tamaño %s", sample_size))
+```
+
+Notemos que para la distribución de Poisson, los datos convergen a una distribución Normal al realizar muestreos de tamaño 100, mientras que las otras dos aún no muestran ese comportamiento. Es al tamaño de muestra de 1000 que las 3 distribuciones se comportan como uno esperaría teóricamente.
 ---
 
 ## Pregunta 3: Ley de los Grandes Numeros.
@@ -171,23 +278,91 @@ Se le aconseja que para simular los lanzamientos de dados utilice la función `s
 
 **Respuesta:**
 
-```{r eval=FALSE}
+```{r}
+n_lan <- 6000000
+
 # Primer grupo de eventos
-N_lan = 1000 # Numero de lanzamientos
-  
-L_A =  # Lanzamientos favorables A = c(1, 2, 6)
-L_B =  # Lanzamientos favorables B = c(1, 2, 3, 4)
-L_AB = # Lanzamientos favorables AB = c(1, 2)
+dice1 <- sample(1:6, n_lan, replace = TRUE)  # Dado 1
+dice2 <- sample(1:6, n_lan, replace = TRUE)  # Dado 2
+dice_count1 <- table(dice1)
+dice_count2 <- table(dice2)
+
+favorable_a <- c(1, 2, 6)  # {1, 2, 6}
+favorable_b <- c(1, 2, 3, 4)  # {1, 2, 3, 4}
+favorable_ayb <- c(1, 2)  # {1, 2}
+
+count_a <- sum(dice_count1[favorable_a])  # |A|
+count_b <- sum(dice_count2[favorable_b])  # |B|
+
+# Ahora contamos los casos donde A y B se cumplen al mismo tiempo
+count_ayb <- 0  # |A∩B|
+for (i in 1:n_lan) {
+  if (dice1[i] %in% favorable_a && dice2[i] %in% favorable_b) {
+    count_ayb <- count_ayb + 1
+  }
+}
+
+# Calculamos las probabilidades
+prob_a <- count_a / n_lan  # P(A)
+prob_b <- count_b / n_lan  # P(B)
+prob_ayb <- count_ayb / n_lan  # P(A∩B)
+
+print(sprintf("P(A) = %s", prob_a))
+print(sprintf("P(B) = %s", prob_b))
+print(sprintf("P(A)*P(B) = %s", prob_a*prob_b))
+print(sprintf("P(A∩B) = %s", prob_ayb))
 ```
 
-```{r eval=FALSE}
-# Segundo grupo de eventos
-N_lan = 1000 # Numero de lanzamientos
-  
-L_A =  # Lanzamientos favorables A = c(1, 2, 6)
-L_B =  # Lanzamientos favorables B = c(1, 2, 3)
-L_AB = # Lanzamientos favorables AB = c(1, 2)
+
+Ahora visualizamos las probabilidades
+```{r, fig.width=12, fig.height=6}
+par(mfrow = c(1, 2))
+y_ax <- c(0, 0, 1, 1)
+x_ax <- c(0, 1, 1, 0)
+
+# Graficamos P(A)
+plot(1, ann = FALSE, type = "n", axes = FALSE, xlim = c(0, 1), ylim = c(0, 1), main = "P(A)")
+x_p_a <- c(0, prob_a, prob_a, 0)
+x_p_a_c <- c(prob_a, 1, 1, prob_a)
+
+polygon(x_p_a, y_ax, col = "blue")
+text(mean(x_p_a), mean(y_ax), expression(P(A)), col = "white", cex = 1.5)
+
+polygon(x_p_a_c, y_ax, col = "red")
+text(mean(x_p_a_c), mean(y_ax), expression(P(A^c)), col = "white", cex = 1.5)
+
+
+# Graficamos P(B)
+plot(2, ann = FALSE, type = "n", axes = FALSE, xlim = c(0, 1), ylim = c(0, 1), main = "P(B)")
+y_p_b <- c(prob_b, prob_b, 1, 1)
+y_p_b_c <- c(0, 0, prob_b, prob_b)
+
+polygon(x_ax, y_p_b, col = "blue")
+text(mean(x_ax), mean(y_p_b), expression(P(B)), col = "white", cex = 1.5)
+
+polygon(x_ax, y_p_b_c, col = "red")
+text(mean(x_ax), mean(y_p_b_c), expression(P(B^c)), col = "white", cex = 1.5)
 ```
+
+Ahora grafiquemos $\mathbb{P}(AB)$
+
+```{r, fig.width=6, fig.height=6}
+plot(1, ann = FALSE, type = "n", axes = FALSE, xlim = c(0, 1), ylim = c(0, 1), main = "P(A∩B)")
+
+polygon(c(0, prob_a, prob_a, 0), c(prob_b, prob_b, 1, 1), col = "blue")
+text(prob_a / 2, 1 - prob_b / 4, expression(P(A * "∩" * B)), col = "white", cex = 1.5)
+
+polygon(c(0, prob_a, prob_a, 0), c(0, 0, prob_b, prob_b), col = "purple")
+text(prob_a / 2, prob_b / 2, expression(P(A * "∩" * B^c)), col = "white", cex = 1.5)
+
+polygon(c(prob_a, 1, 1, prob_a), c(prob_b, prob_b, 1, 1), col = "purple")
+text(1 - prob_a / 2, 1 - prob_b / 4, expression(P(A^c * "∩" * B)), col = "white", cex = 1.5)
+
+polygon(c(prob_a, 1, 1, prob_a), c(0, 0, prob_b, prob_b), col = "red")
+text(1 - prob_a / 2, prob_b / 2, expression(P(A^c * "∩" * B^c)), col = "white", cex = 1.5)
+```
+
+Notemos que el área del cuadrado de la esquina superior izquierda, que representa el área de $\mathbb{P}(A \cap B)$, tiene la misma área que la superposición de las figuras anteriores, 
 
 ---
 ## Pregunta 5: La Ruina del Jugador
@@ -208,18 +383,51 @@ Para la segunda parte de este experimento, con las funciones ya creadas, proyect
 
 **Respuesta**
 
-```{r eval=FALSE}
+```{r}
 # Función para obtener el desarrollo de las apuestas
-ruina <- function(fondos = 100, apuesta = 5){
-  while (0<fondos & fondos<200) {
-    
+ruina <- function(money = 100, bet = 5) {
+  vec_money <- c(money)
+  while (0 < money && money < 200) {
+    game <- as.integer(runif(1, 1, 19))
+    sign <- if (game <= 8) 1 else -1
+    money <- money + sign * bet
+    vec_money <- append(vec_money, money)
   }
-  return(vec_fondos) # Devuelve un vector con el desarrollo de los fondos
+  return(vec_money)
 }
 
 plot(ruina(), type="l", col="blue", xlab="N° de juegos", ylab="Fondos", main="Evolución de los fondos (apuesta = 5)")
-plot(ruina(apuesta = 25), type="l", col="blue", xlab="N° de juegos", ylab="Fondos", main="Evolución de los fondos (apuesta = 25)")
-plot(ruina(apuesta = 50), type="l", col="blue", xlab="N° de juegos", ylab="Fondos", main="Evolución de los fondos (apuesta = 50)")
+plot(ruina(bet = 25), type="l", col="blue", xlab="N° de juegos", ylab="Fondos", main="Evolución de los fondos (apuesta = 25)")
+plot(ruina(bet = 50), type="l", col="blue", xlab="N° de juegos", ylab="Fondos", main="Evolución de los fondos (apuesta = 50)")
+```
+
+En general se ve que la tendencia es perder, solo que al apostar el mínimo se pierde más lento ya que al ser una variación más pequeña, se desestabiliza (es decir, se va a los extremos) de a poco, no así al apostar 50, que es posible perder en dos juegos.
+
+```{r}
+n_bet <- 5000
+bet5_vector <- vector(length = n_bet)
+bet20_vector <- vector(length = n_bet)
+bet50_vector <- vector(length = n_bet)
+for (i in 1:n_bet) {
+  final5_money <- tail(ruina(bet = 5), 1)
+  final20_money <- tail(ruina(bet = 20), 1)
+  final50_money <- tail(ruina(bet = 50), 1)
+  win5 <- if (final5_money <= 0) 0 else 1
+  win20 <- if (final20_money <= 0) 0 else 1
+  win50 <- if (final50_money <= 0) 0 else 1
+  bet5_vector[i] <- win5
+  bet20_vector[i] <- win20
+  bet50_vector[i] <- win50
+}
+t5 <- table(bet5_vector)
+t20 <- table(bet20_vector)
+t50 <- table(bet50_vector)
+print(sprintf("Apuesta = 5 -> E = %d, F = %d, Prob = %f", t5["1"], t5["0"], t5["1"]/(t5["1"] + t5["0"])))
+hist(bet5_vector, main = sprintf("Éxitos y fracasos para apuesta = 5"))
+print(sprintf("Apuesta = 20 -> E = %d, F = %d, Prob = %f", t20["1"], t20["0"], t20["1"]/(t20["1"] + t20["0"])))
+hist(bet20_vector, main = sprintf("Éxitos y fracasos para apuesta = 20"))
+print(sprintf("Apuesta = 50 -> E = %d, F = %d, Prob = %f", t50["1"], t50["0"], t50["1"]/(t50["1"] + t50["0"])))
+hist(bet50_vector, main = sprintf("Éxitos y fracasos para apuesta = 50"))
 ```
 
 
