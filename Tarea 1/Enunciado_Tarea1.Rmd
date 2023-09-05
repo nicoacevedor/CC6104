@@ -11,8 +11,8 @@ output:
 <center><strong>CC6104: Statistical Thinking</strong></center>
 #### **Integrantes :** 
 
-- Nicolás Acevedo
-- Diego Navarrete
+- Nicolás Acevedo Rivas
+- Diego Navarrete Gonzalez
 
 #### **Cuerpo Docente:**
 
@@ -91,6 +91,107 @@ En base al dataset propuesto realice un análisis exploratorio de los datos (EDA
 - [ ] Visualice a través de un histograma como distribuyen las variables respecto a los TARGET.
 
 **Respuesta**
+```{r}
+my.frame <- read.table(file = "hearth_database.csv",header = T,sep = ",", fileEncoding = "latin1")
+colnames(my.frame)[colnames(my.frame) == "ï..age"] <- "age"
+
+
+#slope
+mean(my.frame$slope)
+median(my.frame$slope)
+quantile(my.frame$slope)
+max(my.frame$slope)
+
+#ca
+mean(my.frame$ca)
+median(my.frame$ca)
+quantile(my.frame$ca)
+max(my.frame$ca)
+
+#thal
+mean(my.frame$thal)
+median(my.frame$thal)
+quantile(my.frame$thal)
+max(my.frame$thal)
+
+#age
+mean(my.frame$age)
+median(my.frame$age)
+quantile(my.frame$age)
+max(my.frame$age)
+
+#trestbps
+mean(my.frame$trestbps)
+median(my.frame$trestbps)
+quantile(my.frame$trestbps)
+max(my.frame$trestbps)
+
+#chol
+mean(my.frame$chol)
+median(my.frame$chol)
+quantile(my.frame$chol)
+max(my.frame$chol)
+
+#thalach
+mean(my.frame$thalach)
+median(my.frame$thalach)
+quantile(my.frame$thalach)
+max(my.frame$thalach)
+
+#oldpeak
+mean(my.frame$oldpeak)
+median(my.frame$oldpeak)
+quantile(my.frame$oldpeak)
+max(my.frame$oldpeak)
+
+
+#summary(my.frame)
+```
+
+
+```{r}
+cor(my.frame[,7:14])
+
+```
+```{r}
+#boxplot(my.frame[,7:14],main="Hearth")
+boxplot(my.frame$slope,main="Hearth slope")
+boxplot(my.frame$ca,main="Hearth ca")
+boxplot(my.frame$thal,main="Hearth thal")
+boxplot(my.frame$age,main="Hearth age")
+boxplot(my.frame$trestbps,main="Hearth trestbps")
+boxplot(my.frame$chol,main="Hearth chol")
+boxplot(my.frame$thalach,main="Hearth thalach")
+boxplot(my.frame$oldpeak,main="Hearth oldpeak")
+
+```
+```{r}
+hist(my.frame$age[my.frame$target == "YES"],main="Distribución de Edad para 'YES'")
+hist(my.frame$age[my.frame$target == "NO"],main="Distribución de Edad para 'NO'")
+
+hist(my.frame$slope[my.frame$target == "YES"],main="Distribución de slope para 'YES'")
+hist(my.frame$slope[my.frame$target == "NO"],main="Distribución de slope para 'NO'")
+
+hist(my.frame$ca[my.frame$target == "YES"],main="Distribución de ca para 'YES'")
+hist(my.frame$ca[my.frame$target == "NO"],main="Distribución de ca para 'NO'")
+
+hist(my.frame$thal[my.frame$target == "YES"],main="Distribución de thal para 'YES'")
+hist(my.frame$thal[my.frame$target == "NO"],main="Distribución de thal para 'NO'")
+
+hist(my.frame$trestbps[my.frame$target == "YES"],main="Distribución de trestbps para 'YES'")
+hist(my.frame$trestbps[my.frame$target == "NO"],main="Distribución de trestbps para 'NO'")
+
+hist(my.frame$chol[my.frame$target == "YES"],main="Distribución de chol para 'YES'")
+hist(my.frame$chol[my.frame$target == "NO"],main="Distribución de chol para 'NO'")
+
+hist(my.frame$thalach[my.frame$target == "YES"],main="Distribución de thalach para 'YES'")
+hist(my.frame$thalach[my.frame$target == "NO"],main="Distribución de thalach para 'NO'")
+
+hist(my.frame$oldpeak[my.frame$target == "YES"],main="Distribución de oldpeak para 'YES'")
+hist(my.frame$oldpeak[my.frame$target == "NO"],main="Distribución de oldpeak para 'NO'")
+
+```
+
 
 ---
 
@@ -228,13 +329,28 @@ Realice el experimento de lanzar una moneda cargada 1000 veces y observe el comp
 
 **Respuesta**
 
-```{r eval=TRUE}
+```{r}
+
+
+# Inicializa un vector para almacenar las probabilidades en cada paso
+probabilidades <- numeric(1000)
+
 # Simular lanzamientos
 for (lanzamientos in 1:1000) {
+  # Genera una secuencia de lanzamientos de la moneda y cuenta cuántas caras salieron
+  resultados <- sample(c("cara", "sello"), lanzamientos, replace = TRUE, prob = c(5/8, 1 - 5/8))
+  caras <- sum(resultados == "cara")
   
+  # Calcula la probabilidad de salir cara en este punto
+  probabilidad_actual <- caras / lanzamientos
+  probabilidades[lanzamientos] <- probabilidad_actual
 }
 
 # Gráfico de la convergencia
+
+plot(1:1000, probabilidades, type = "l", col = "blue", xlab = "Número de intentos", ylab = "Probabilidad de salir cara")
+abline(h = 5/8, col = "red", lty = 2)
+legend("topright", legend = c("Probabilidad teórica", "Probabilidad simulada"), col = c("red", "blue"), lty = 2:1)
 ```
 
 #### El problema de Monty Hall 
@@ -252,19 +368,51 @@ Imagine que usted es participante del concurso y desea calcular la probabilidad 
 
 **Respuesta:**
 
-```{r eval=FALSE}
+```{r}
 # Creamos una función que simule el juego
 montyhall <- function(cambiar = TRUE){
-  Puertas <- sample(1:3,3)             #Puertas donde la posición que tiene el 3 es el premio
-  posicion <- sample(1:3,1)            #Elección del participante.
+  puertas <- sample(1:3,3)             #Puertas donde la posición que tiene el 3 es el premio
+  eleccion <- sample(1:3,1)            #Elección del participante.
+
+  puertas_no_elegidas <- setdiff(puertas, eleccion)
+
+  puertas_no_elegidas_corr <-puertas_no_elegidas[puertas_no_elegidas != 3]
+  if(length(puertas_no_elegidas_corr) == 1){
+    puerta_abierta <- puertas_no_elegidas[1]
+  }
+  else{
+    puerta_abierta <- sample(puertas_no_elegidas[puertas_no_elegidas != 3], size = 1)
+  }
   
-  return(Eleccion) # Retornamos la elección, esta puede que tenga el premio o no
+
+
+  eleccion_final <- eleccion == 3
+  if(cambiar){
+
+    puertas_restantes <- setdiff(puertas, c(eleccion, puerta_abierta))
+
+    eleccion_final <- puertas_restantes
+    eleccion_final <- puertas[eleccion_final] == 3
+  }
+  
+  return(eleccion_final) # Retornamos la elección, esta puede que tenga el premio o no
 }
 
 # Función que simula N juegos
 n_juegos <- function(n = 10 ,cambiar_puerta = TRUE){
+  resultados <- replicate(n, montyhall(cambiar_puerta))
   
+  probabilidad_cambio <- mean(resultados)
+  
+  plot(1:n, cumsum(resultados)/(1:n), type = "l", col = "blue", 
+     xlab = "Número de simulaciones", ylab = "Probabilidad de ganar ")
+abline(h = probabilidad_cambio, col = "red", lty = 2)
+legend("topright", legend = c("Probabilidad", "Probabilidad promedio"), col = c("red", "blue"), lty = 2:1)
+  
+
 }
+n_juegos(1000)
+n_juegos(1000,FALSE)
 ```
 
 ---
@@ -430,6 +578,7 @@ print(sprintf("Apuesta = 50 -> E = %d, F = %d, Prob = %f", t50["1"], t50["0"], t
 hist(bet50_vector, main = sprintf("Éxitos y fracasos para apuesta = 50"))
 ```
 
+Puede verse que la probabilidad de éxito va aumentando a medida que el monto de apuesta aumenta. 
 
 
 &nbsp;
