@@ -578,7 +578,7 @@ print(sprintf("Apuesta = 50 -> E = %d, F = %d, Prob = %f", t50["1"], t50["0"], t
 hist(bet50_vector, main = sprintf("Éxitos y fracasos para apuesta = 50"))
 ```
 
-Puede verse que la probabilidad de éxito va aumentando a medida que el monto de apuesta aumenta. 
+Puede verse que la probabilidad de éxito va aumentando a medida que el monto de apuesta aumenta, ya que es más fácil ganar al ser menor la cantidad de juegos necesarios para pasar la barrera de los 200.
 
 
 &nbsp;
