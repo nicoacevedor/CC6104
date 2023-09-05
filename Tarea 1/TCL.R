@@ -1,9 +1,9 @@
-plot_gauss <- function(x) {
+plot_gauss <- function(x, name) {
   avg <- mean(x)
   std <- sd(x)
   x_axis <- seq(min(x), max(x), length = length(x))
   y_axis <- dnorm(x_axis, mean = avg, sd = std)
-  hist(x)
+  hist(x, main = sprintf("Gráfico de la distribución %s", name))
   lines(x_axis, y_axis, type = "l", col = "red")
 }
 
@@ -18,30 +18,30 @@ for (i in 1:iter) {
   poisson_vector[i] <- mean(new_vector)
 }
 
-plot_gauss(poisson_vector)
+plot_gauss(poisson_vector, "de Poisson")
 
 
-iter <- 1000
-avg <- 1.5
-std <- 0.75
-norm_vector <- vector(length = iter)
+# iter <- 1000
+# avg <- 1.5
+# std <- 0.75
+# norm_vector <- vector(length = iter)
 
-for (i in 1:iter) {
-  new_vector <- rnorm(n = sample_size, mean = avg, sd = std)
-  norm_vector[i] <- mean(new_vector)
-}
+# for (i in 1:iter) {
+#   new_vector <- rnorm(n = sample_size, mean = avg, sd = std)
+#   norm_vector[i] <- mean(new_vector)
+# }
 
-plot_gauss(norm_vector)
+# plot_gauss(norm_vector, "Normal")
 
 
-iter <- 5000
-shape <- 2
-scale <- 1.5
-gamma_vector <- vector(length = iter)
+# iter <- 5000
+# shape <- 2
+# scale <- 1.5
+# gamma_vector <- vector(length = iter)
 
-for (i in 1:iter) {
-  new_vector <- rgamma(n = sample_size, shape = shape, scale = scale)
-  gamma_vector[i] <- mean(new_vector)
-}
+# for (i in 1:iter) {
+#   new_vector <- rgamma(n = sample_size, shape = shape, scale = scale)
+#   gamma_vector[i] <- mean(new_vector)
+# }
 
-plot_gauss(gamma_vector)
+# plot_gauss(gamma_vector, "Gamma")
