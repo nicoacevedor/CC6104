@@ -153,7 +153,7 @@ max(my.frame$oldpeak)
 cor(my.frame[,7:14])
 
 ```
-```{r}
+```{r fig.height=5, fig.width=3}
 #boxplot(my.frame[,7:14],main="Hearth")
 boxplot(my.frame$slope,main="Hearth slope")
 boxplot(my.frame$ca,main="Hearth ca")
@@ -165,30 +165,30 @@ boxplot(my.frame$thalach,main="Hearth thalach")
 boxplot(my.frame$oldpeak,main="Hearth oldpeak")
 
 ```
-```{r}
-hist(my.frame$age[my.frame$target == "YES"],main="Distribución de Edad para 'YES'")
-hist(my.frame$age[my.frame$target == "NO"],main="Distribución de Edad para 'NO'")
+```{r fig.height=4, fig.width=4}
+hist(my.frame$age[my.frame$target == "YES"],main="Distribución de Edad para 'YES'", xlab = "Edad")
+hist(my.frame$age[my.frame$target == "NO"],main="Distribución de Edad para 'NO'", xlab = "Edad")
 
-hist(my.frame$slope[my.frame$target == "YES"],main="Distribución de slope para 'YES'")
-hist(my.frame$slope[my.frame$target == "NO"],main="Distribución de slope para 'NO'")
+hist(my.frame$slope[my.frame$target == "YES"],main="Distribución de slope para 'YES'", xlab = "Slope")
+hist(my.frame$slope[my.frame$target == "NO"],main="Distribución de slope para 'NO'", xlab = "Slope")
 
-hist(my.frame$ca[my.frame$target == "YES"],main="Distribución de ca para 'YES'")
-hist(my.frame$ca[my.frame$target == "NO"],main="Distribución de ca para 'NO'")
+hist(my.frame$ca[my.frame$target == "YES"],main="Distribución de ca para 'YES'", xlab = "Ca")
+hist(my.frame$ca[my.frame$target == "NO"],main="Distribución de ca para 'NO'", xlab = "Ca")
 
-hist(my.frame$thal[my.frame$target == "YES"],main="Distribución de thal para 'YES'")
-hist(my.frame$thal[my.frame$target == "NO"],main="Distribución de thal para 'NO'")
+hist(my.frame$thal[my.frame$target == "YES"],main="Distribución de thal para 'YES'", xlab = "Thal")
+hist(my.frame$thal[my.frame$target == "NO"],main="Distribución de thal para 'NO'", xlab = "Thal")
 
-hist(my.frame$trestbps[my.frame$target == "YES"],main="Distribución de trestbps para 'YES'")
-hist(my.frame$trestbps[my.frame$target == "NO"],main="Distribución de trestbps para 'NO'")
+hist(my.frame$trestbps[my.frame$target == "YES"],main="Distribución de trestbps para 'YES'", xlab = "Trestbps")
+hist(my.frame$trestbps[my.frame$target == "NO"],main="Distribución de trestbps para 'NO'", xlab = "Trestbps")
 
-hist(my.frame$chol[my.frame$target == "YES"],main="Distribución de chol para 'YES'")
-hist(my.frame$chol[my.frame$target == "NO"],main="Distribución de chol para 'NO'")
+hist(my.frame$chol[my.frame$target == "YES"],main="Distribución de chol para 'YES'", xlab = "Chol")
+hist(my.frame$chol[my.frame$target == "NO"],main="Distribución de chol para 'NO'", xlab = "Chol")
 
-hist(my.frame$thalach[my.frame$target == "YES"],main="Distribución de thalach para 'YES'")
-hist(my.frame$thalach[my.frame$target == "NO"],main="Distribución de thalach para 'NO'")
+hist(my.frame$thalach[my.frame$target == "YES"],main="Distribución de thalach para 'YES'", xlab = "Thalach")
+hist(my.frame$thalach[my.frame$target == "NO"],main="Distribución de thalach para 'NO'", xlab = "Thalach")
 
-hist(my.frame$oldpeak[my.frame$target == "YES"],main="Distribución de oldpeak para 'YES'")
-hist(my.frame$oldpeak[my.frame$target == "NO"],main="Distribución de oldpeak para 'NO'")
+hist(my.frame$oldpeak[my.frame$target == "YES"],main="Distribución de oldpeak para 'YES'", xlab = "Oldpeak")
+hist(my.frame$oldpeak[my.frame$target == "NO"],main="Distribución de oldpeak para 'NO'", xlab = "Oldpeak")
 
 ```
 
@@ -329,18 +329,20 @@ Realice el experimento de lanzar una moneda cargada 1000 veces y observe el comp
 
 **Respuesta**
 
-```{r}
+```{r fig.width=12}
 
 
 # Inicializa un vector para almacenar las probabilidades en cada paso
 probabilidades <- numeric(1000)
+resultados <- numeric(1000)
 
 # Simular lanzamientos
 for (lanzamientos in 1:1000) {
   # Genera una secuencia de lanzamientos de la moneda y cuenta cuántas caras salieron
-  resultados <- sample(c("cara", "sello"), lanzamientos, replace = TRUE, prob = c(5/8, 1 - 5/8))
+  resultados[lanzamientos] <- sample(c("cara", "sello"), 1, replace = TRUE, prob = c(5/8, 1 - 5/8))
   caras <- sum(resultados == "cara")
   
+  #print(resultados)
   # Calcula la probabilidad de salir cara en este punto
   probabilidad_actual <- caras / lanzamientos
   probabilidades[lanzamientos] <- probabilidad_actual
@@ -368,7 +370,7 @@ Imagine que usted es participante del concurso y desea calcular la probabilidad 
 
 **Respuesta:**
 
-```{r}
+```{r fig.width=12}
 # Creamos una función que simule el juego
 montyhall <- function(cambiar = TRUE){
   puertas <- sample(1:3,3)             #Puertas donde la posición que tiene el 3 es el premio
@@ -376,14 +378,18 @@ montyhall <- function(cambiar = TRUE){
 
   puertas_no_elegidas <- setdiff(puertas, eleccion)
 
+
+  
   puertas_no_elegidas_corr <-puertas_no_elegidas[puertas_no_elegidas != 3]
+
+  
   if(length(puertas_no_elegidas_corr) == 1){
-    puerta_abierta <- puertas_no_elegidas[1]
+    puerta_abierta <- puertas_no_elegidas_corr[1]
   }
   else{
     puerta_abierta <- sample(puertas_no_elegidas[puertas_no_elegidas != 3], size = 1)
   }
-  
+
 
 
   eleccion_final <- eleccion == 3
@@ -392,7 +398,7 @@ montyhall <- function(cambiar = TRUE){
     puertas_restantes <- setdiff(puertas, c(eleccion, puerta_abierta))
 
     eleccion_final <- puertas_restantes
-    eleccion_final <- puertas[eleccion_final] == 3
+    eleccion_final <- eleccion_final == 3
   }
   
   return(eleccion_final) # Retornamos la elección, esta puede que tenga el premio o no
@@ -403,7 +409,7 @@ n_juegos <- function(n = 10 ,cambiar_puerta = TRUE){
   resultados <- replicate(n, montyhall(cambiar_puerta))
   
   probabilidad_cambio <- mean(resultados)
-  
+
   plot(1:n, cumsum(resultados)/(1:n), type = "l", col = "blue", 
      xlab = "Número de simulaciones", ylab = "Probabilidad de ganar ")
 abline(h = probabilidad_cambio, col = "red", lty = 2)
@@ -411,8 +417,10 @@ legend("topright", legend = c("Probabilidad", "Probabilidad promedio"), col = c(
   
 
 }
-n_juegos(1000)
-n_juegos(1000,FALSE)
+
+#Aqui vemos la diferencia entre cambiar siempre de puerta, y mantenerse siempre
+n_juegos(10000)
+n_juegos(10000,FALSE)
 ```
 
 ---
