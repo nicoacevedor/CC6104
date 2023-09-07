@@ -434,91 +434,93 @@ Se le aconseja que para simular los lanzamientos de dados utilice la función `s
 
 **Respuesta:**
 
-```{r}
-n_lan <- 6000000
+```{r, fig.width=12}
+n_lan <- 1000000
 
-# Primer grupo de eventos
+# Primer experimento
+
 dice1 <- sample(1:6, n_lan, replace = TRUE)  # Dado 1
 dice2 <- sample(1:6, n_lan, replace = TRUE)  # Dado 2
-dice_count1 <- table(dice1)
-dice_count2 <- table(dice2)
 
 favorable_a <- c(1, 2, 6)  # {1, 2, 6}
 favorable_b <- c(1, 2, 3, 4)  # {1, 2, 3, 4}
 favorable_ayb <- c(1, 2)  # {1, 2}
 
-count_a <- sum(dice_count1[favorable_a])  # |A|
-count_b <- sum(dice_count2[favorable_b])  # |B|
+prob_axb <- vector(length = n_lan)
+prob_ayb <- vector(length = n_lan)
 
-# Ahora contamos los casos donde A y B se cumplen al mismo tiempo
-count_ayb <- 0  # |A∩B|
+cum_a <- 0  # |A|
+cum_b <- 0  # |B|
+cum_ayb <- 0  # |A∩B|
+
+# Conteo de casos
 for (i in 1:n_lan) {
-  if (dice1[i] %in% favorable_a && dice2[i] %in% favorable_b) {
-    count_ayb <- count_ayb + 1
+  a <- FALSE
+  b <- FALSE
+  if (dice1[i] %in% favorable_a) {
+    cum_a <- cum_a + 1
+    a <- TRUE
   }
+  if (dice2[i] %in% favorable_b) {
+    cum_b <- cum_b + 1
+    b <- TRUE
+  }
+  cum_ayb <- if (a && b) (cum_ayb + 1) else cum_ayb
+
+  prob_axb[i] <- (cum_a / i) * (cum_b / i)
+  prob_ayb[i] <- cum_ayb / i
 }
 
-# Calculamos las probabilidades
-prob_a <- count_a / n_lan  # P(A)
-prob_b <- count_b / n_lan  # P(B)
-prob_ayb <- count_ayb / n_lan  # P(A∩B)
-
-print(sprintf("P(A) = %s", prob_a))
-print(sprintf("P(B) = %s", prob_b))
-print(sprintf("P(A)*P(B) = %s", prob_a*prob_b))
-print(sprintf("P(A∩B) = %s", prob_ayb))
+# Gráfico del experimento
+plot(1, ann = FALSE, type = "n", xlim = c(0, n_lan+1), ylim = c(0, 1))
+lines(seq(1, n_lan), prob_axb, col = "blue")
+lines(seq(1, n_lan), prob_ayb, col = "red")
+legend(8e+05, 1, legend = c("P(A)*P(B)", "P(A∩B)"), fill = c("blue", "red"))
 ```
 
+Para el otro evento:
+```{r, fig.width=12}
+# Segundo experimento
 
-Ahora visualizamos las probabilidades
-```{r, fig.width=12, fig.height=6}
-par(mfrow = c(1, 2))
-y_ax <- c(0, 0, 1, 1)
-x_ax <- c(0, 1, 1, 0)
+dice <- sample(1:6, n_lan, replace = TRUE)  # Dado
 
-# Graficamos P(A)
-plot(1, ann = FALSE, type = "n", axes = FALSE, xlim = c(0, 1), ylim = c(0, 1), main = "P(A)")
-x_p_a <- c(0, prob_a, prob_a, 0)
-x_p_a_c <- c(prob_a, 1, 1, prob_a)
+favorable_a <- c(1, 2, 6)  # {1, 2, 6}
+favorable_b <- c(1, 2, 3)  # {1, 2, 3}
+favorable_ayb <- c(1, 2)  # {1, 2}
 
-polygon(x_p_a, y_ax, col = "blue")
-text(mean(x_p_a), mean(y_ax), expression(P(A)), col = "white", cex = 1.5)
+prob_axb <- vector(length = n_lan)
+prob_ayb <- vector(length = n_lan)
 
-polygon(x_p_a_c, y_ax, col = "red")
-text(mean(x_p_a_c), mean(y_ax), expression(P(A^c)), col = "white", cex = 1.5)
+cum_a <- 0  # |A|
+cum_b <- 0  # |B|
+cum_ayb <- 0  # |A∩B|
 
+# Conteo de casos
+for (i in 1:n_lan) {
+  a <- FALSE
+  b <- FALSE
+  if (dice[i] %in% favorable_a) {
+    cum_a <- cum_a + 1
+    a <- TRUE
+  }
+  if (dice[i] %in% favorable_b) {
+    cum_b <- cum_b + 1
+    b <- TRUE
+  }
+  cum_ayb <- if (a && b) (cum_ayb + 1) else cum_ayb
 
-# Graficamos P(B)
-plot(2, ann = FALSE, type = "n", axes = FALSE, xlim = c(0, 1), ylim = c(0, 1), main = "P(B)")
-y_p_b <- c(prob_b, prob_b, 1, 1)
-y_p_b_c <- c(0, 0, prob_b, prob_b)
+  prob_axb[i] <- (cum_a / i) * (cum_b / i)
+  prob_ayb[i] <- cum_ayb / i
+}
 
-polygon(x_ax, y_p_b, col = "blue")
-text(mean(x_ax), mean(y_p_b), expression(P(B)), col = "white", cex = 1.5)
-
-polygon(x_ax, y_p_b_c, col = "red")
-text(mean(x_ax), mean(y_p_b_c), expression(P(B^c)), col = "white", cex = 1.5)
+# Gráfico del experimento
+plot(1, ann = FALSE, type = "n", xlim = c(0, n_lan + 1), ylim = c(0, 1))
+lines(seq(1, n_lan), prob_axb, col = "blue")
+lines(seq(1, n_lan), prob_ayb, col = "red")
+legend(8e+05, 1, legend = c("P(A)*P(B)", "P(A∩B)"), fill = c("blue", "red"))
 ```
 
-Ahora grafiquemos $\mathbb{P}(AB)$
-
-```{r, fig.width=6, fig.height=6}
-plot(1, ann = FALSE, type = "n", axes = FALSE, xlim = c(0, 1), ylim = c(0, 1), main = "P(A∩B)")
-
-polygon(c(0, prob_a, prob_a, 0), c(prob_b, prob_b, 1, 1), col = "blue")
-text(prob_a / 2, 1 - prob_b / 4, expression(P(A * "∩" * B)), col = "white", cex = 1.5)
-
-polygon(c(0, prob_a, prob_a, 0), c(0, 0, prob_b, prob_b), col = "purple")
-text(prob_a / 2, prob_b / 2, expression(P(A * "∩" * B^c)), col = "white", cex = 1.5)
-
-polygon(c(prob_a, 1, 1, prob_a), c(prob_b, prob_b, 1, 1), col = "purple")
-text(1 - prob_a / 2, 1 - prob_b / 4, expression(P(A^c * "∩" * B)), col = "white", cex = 1.5)
-
-polygon(c(prob_a, 1, 1, prob_a), c(0, 0, prob_b, prob_b), col = "red")
-text(1 - prob_a / 2, prob_b / 2, expression(P(A^c * "∩" * B^c)), col = "white", cex = 1.5)
-```
-
-Notemos que el área del cuadrado de la esquina superior izquierda, que representa el área de $\mathbb{P}(A \cap B)$, tiene la misma área que la superposición de las figuras anteriores, 
+Notemos que en el primer experimento, $\mathbb{P}(A)*\mathbb{P}(B)$ y $\mathbb{P}(A \cap B)$ convergen rápidamente a el mismo valor, mostrando así que se los valores son iguales y por lo tanto ambos eventos son independientes. Por el contrario, en el segundo experimento puede verse que ambos valores son diferentes durante prácticamente todos los lanzamientos, y se mantienen distantes durante todo el experimento. Esto muestra que $\mathbb{P}(A)*\mathbb{P}(B)$ y $\mathbb{P}(A \cap B)$ no son iguales, y con esto que ambos eventos son dependientes.
 
 ---
 ## Pregunta 5: La Ruina del Jugador
