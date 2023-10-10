@@ -11,9 +11,9 @@ for (k in 1:n_max) {
   T[k] = estimator[k] + noise[k]
 }
 
-plot <- plot_ly(
+plot_est <- plot_ly(
   x = 1:n_max,
-  y = T,
+  y = noise,
   mode = "lines",
   type = "scatter",
   name = "Experimentos",
@@ -31,4 +31,5 @@ layout(
   yaxis = list(title = "Probabilidad")
 )
 
-print(plot)
+print(plot_est)
+print(summary(T))

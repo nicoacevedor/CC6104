@@ -1,0 +1,358 @@
+---
+title: "Tarea 2"
+output:
+  html_document:
+    df_print: paged
+---
+
+![](banner.png)
+
+<center> <h1>Tarea 2: Frequentist Inference </h1> </center>
+<center><strong>CC6104: Statistical Thinking</strong></center>
+#### **Integrantes :** 
+
+- Nicolás Acevedo
+- Diego Navarrete
+
+#### **Cuerpo Docente:**
+
+- Profesor: Felipe Bravo M.
+- Auxiliares: Martín Paredes, María José Zambrano
+- Ayudantes: Nicolas Cabello, Kevin Iturra, Mariana Vásquez
+
+### **Índice:**
+
+1. [Objetivo](#id1)
+2. [Instrucciones](#id2)
+3. [Referencias](#id3)
+4. [Elaboración de Código](#id4)
+
+### **Objetivo**<a name="id1"></a>
+
+Bienvenid@s a la segunda tarea del curso Statistical Thinking. Esta tarea tiene como objetivo evaluar los contenidos teóricos de la segunda parte del curso, los cuales se enfocan principalmente en inferencia estadística, diseño de experimentos y test de hipótesis. Si aún no han visto las clases, se recomienda visitar los enlaces de las referencias.
+
+La tarea consta de una parte teórica que busca evaluar conceptos vistos en clases. Seguido por una parte práctica con el fin de introducirlos a la programación en R enfocada en el análisis estadístico de datos. 
+
+### **Instrucciones:**<a name="id2"></a>
+
+- La tarea se realiza en grupos de **máximo 2 personas**. Pero no existe problema si usted desea hacerla de forma individual.
+- La entrega es a través de u-cursos a más tardar el día estipulado en la misma plataforma. A las tareas atrasadas se les descontará un punto por día.
+- El formato de entrega es este mismo **Rmarkdown** y un **html** con la tarea desarrollada. Por favor compruebe que todas las celdas han sido ejecutadas en el archivo html.
+- Al momento de la revisión tu código será ejecutado. Por favor verifica que tu entrega no tenga errores de compilación.
+- No serán revisadas tareas desarrolladas en Python.
+- Está **PROHIBIDO** la copia o compartir las respuestas entre integrantes de diferentes grupos.
+- Pueden realizar consultas de la tarea a través de U-cursos y/o del canal de Discord del curso. 
+
+
+### **Referencias:**<a name="id3"></a>
+
+Slides de las clases:
+
+- [Introduction to Statistical Inference](https://github.com/dccuchile/CC6104/blob/master/slides/ST-inference.pdf)
+- [Design of Experiments & Hypothesis Testing](https://github.com/dccuchile/CC6104/blob/master/slides/ST-hypothesis.pdf)
+
+Enlaces a videos de las clases:
+
+- Introduction to Statistical Inference: [video1](https://youtu.be/A0BAhO9_RSI) [video2](https://youtu.be/6Io555e2stM) [video3](https://youtu.be/2-Q2f6zmTns) [video4](https://youtu.be/Hp2A5EJoXbk) [video5](https://youtu.be/M0Ag4bww7Q0) [video6](https://youtu.be/K7khgecup3I) [video7](https://youtu.be/uZ126Lh3L-k) [video8](https://youtu.be/kHSPx99nJ7g)
+- Design of Experiments & Hypothesis Testing: [video1](https://youtu.be/3MueyHnNNig) [video2](https://youtu.be/JuyIrya23E0) [video3](https://youtu.be/OXTyG6DIvK4) [video4](https://youtu.be/95QeSwrNoLI) [video5](https://youtu.be/ZCr3WCdc-54) [video6](https://youtu.be/T6ZR0KoKhBQ)
+
+Documentación:
+
+- [Boostrap en r](https://www.datacamp.com/community/tutorials/bootstrap-r)
+- [ggplot2](https://ggplot2.tidyverse.org/)
+
+### **Elaboración de código**<a name="id4"></a>
+
+Usted deberá resolver cada uno de los experimentos computacionales a través de la programación en R. Para esto se le aconseja que cree funciones en R, ya que le facilitará la ejecución de gran parte de lo solicitado.
+
+Para el desarrollo preste mucha atención en los enunciados, ya que se le solicitará la implementación de métodos sin uso de funciones predefinidas. Por otro lado, Las librerías permitidas para desarrollar de la tarea 2 son las siguientes:
+
+```{r load-packages, include=FALSE}
+# Manipulación de estructuras
+library(tidyverse)
+
+# Para realizar plots
+library(ggplot2)
+library(plotly)
+
+# Manipulación de varios plots en una imagen.
+library(gridExtra)
+
+# librería para bootstrap
+library(boot)
+```
+
+
+### Pregunta 1: Estimadores.
+Esta pregunta tiene como objetivo comprobar a través de gráficos las características que poseen los estimadores.Por favor responda de forma separada las siguientes preguntas: 
+
+- [ ] En clases se vio que el estimador $\hat{p}_{n} = \frac{1}{n} \displaystyle{\sum_{i=1}^{n}}X_{i}$ es un estimador consistente para $X_{i}$ Bernoulli de tasa $p$, verifique esto númericamente para una distribución Bernoulli de $p=0.5$, es decir grafique como se ve $\hat{p}_{n}$ para valores de $n$ y compárelo con el valor verdadero.
+
+- [ ] Sabemos que no todos los estimadores insesgados son consistentes. Considere  el estimador $T_{n} = \hat{p}_{n} + \epsilon_{n}$ donde $\epsilon_{n} \sim \mathcal{N}(0,1)$ es posible verificar que $T_{n}$ es insesgado pero no es consistente, para ver esto repita lo que realizo en el punto anterior y estudie lo que sucede. ¿Porque cree que no es consistente el estimador?, Justifique su respuesta.
+
+**Respuesta:**
+En primera instancia, realizamos 50.000 experimentos aleatorios para una distribución de Bernoulli. Luego, graficamos como se va viendo el estimador $\hat{p}_{n}$ mientras se va avanzando en la cantidad de experimentos.
+
+```{r}
+n_max <- 50000
+p <- 0.5
+
+# Vectores del estimador y de la distribución de Bernoulli
+estimator <- vector(length = n_max)
+bernoulli <- rbinom(n_max, size = 1, prob = p)
+
+# Para cada valor del vector, se promedia con los anteriores
+# y se agregan al estimador
+for (k in 1:n_max) {
+  estimator[k] <- sum(bernoulli[1:k]) / k
+}
+
+
+# Gráfico de los experimentos
+plot_est <- plot_ly(
+  x = 1:n_max,
+  y = estimator,
+  mode = "lines",
+  type = "scatter",
+  name = "Experimentos",
+  line = list(color = "blue")
+) %>%
+add_trace(
+  x = 1:n_max,
+  y = 0.5,
+  name = "p = 0.5",
+  line = list(color = "red")
+) %>%
+layout(
+  title = "Estimador Pn para X ~ Bernoulli(p) con p = 0.5",
+  xaxis = list(title = sprintf("Pasos (%d)", n_max)),
+  yaxis = list(title = "Probabilidad")
+)
+plot_est
+```
+
+Podemos notar que a medida que vamos avanzando en la cantidad de experimentos, el estimador se acerca cada vez más al valor teórico de $p = 0.5$, lo cual verifica que el estimador es consistente.
+
+
+Por otra parte, realizamos el mismo procedimiento para el estimador $T_{n}$.
+
+```{r}
+n_max <- 50000
+
+estimator <- vector(length = n_max)
+bernoulli <- rbinom(n_max, size = 1, prob = 0.5)
+noise <- rnorm(n_max)
+T <- vector(length = n_max)
+
+for (k in 1:n_max) {
+  estimator[k] <- sum(bernoulli[1:k]) / k
+  T[k] = estimator[k] + noise[k]
+}
+
+plot_est <- plot_ly(
+  x = 1:n_max,
+  y = T,
+  mode = "lines",
+  type = "scatter",
+  name = "Experimentos",
+  line = list(color = "blue")
+) %>%
+add_trace(
+  x = 1:n_max,
+  y = 0.5,
+  name = "p = 0.5",
+  line = list(color = "red")
+) %>%
+layout(
+  title = "Estimador Tn para X ~ Bernoulli(p) con p = 0.5",
+  xaxis = list(title = sprintf("Pasos (%d)", n_max)),
+  yaxis = list(title = "Probabilidad")
+)
+
+plot_est
+```
+Se puede apreciar que el estimador $T_n$ no es consistente ya que no converge al valor esperado de $p = 0.5$.
+La inconsistencia de este estimador se debe a que al estimador $\hat{p}_n$ se le agrega una variable normal en cada iteración, un "ruido".
+
+```{r}
+plot_est <- plot_ly(
+  x = 1:n_max,
+  y = noise,
+  mode = "lines",
+  type = "scatter",
+  name = "Ruido",
+  line = list(color = "blue")
+) %>%
+layout(
+  title = "Ruido e ~ N(0, 1)",
+  xaxis = list(title = sprintf("Pasos (%d)", n_max)),
+  yaxis = list(title = "Probabilidad")
+)
+
+plot_est
+```
+
+Este ruido es el que no permite que el estimador $T_n$ converga al parámetro $p$, ya que hace que el estimador "oscile" aleatoriamente, evitando que converga y por lo tanto, haciendo de $T_n$ un estimador insesgado pero inconsistente.
+
+---
+
+### Pregunta 2: Intervalo de Confianza
+El objetivo de esta pregunta es visualizar los intervalos de confianza en datos simulados de una población, para visualizar la incertidumbre que presenta una estimación. Para esto, ustedes deberán generar datos de una distribución exponencial, la cual deberán considerar como los datos de la población. En base a los datos generados, estimen la distribución de la media de la población a través de la `sampling distribution` de la media. Notar que el valor obtenido en cada muestra les entregará un estimador de la media, o sea, para cada valor podremos calcular un intervalo de confianza. Hecho esto, calculen el intervalo de confianza del $95\%$ para cada una de las medias estimadas, utilizando la función de cuartil vista en clases.
+
+Para la elaboración de esta parte de la tarea, se recomienda realizar el experimento con la siguiente secuencialidad:
+
+- [ ] Obtener la media de la población (en este caso la exponencial).
+- [ ] Realizar una `sampling distribution` con un tamaño de muestra igual a $30$ sobre los datos generados de la población. Repita la obtención de la media un número elevado de veces (recomendación $5000$ veces).
+- [ ] Calcular el intervalo de confianza del $95\%$ para cada uno de las medias obtenidas en las iteraciones.
+- [ ] De acuerdo a los valores obtenidos (medias e intervalos de confianza), grafique cada una de las medias obtenidas en conjunto a sus intervalos de confianza. Aquí debe notar que, si el intervalo de confianza contiene a la media de la población, este se considerará como parte del intervalo de confianza del $95\%$, haga un conteo de cuantos valores están contenidos en este intervalo.
+- [ ] Señalar en el plot de intervalo de confianza los valores que están dentro y fuera del intervalo. Comente que visualiza de los intervalos de confianza obtenidos, ¿existe incertidumbre?.
+- [ ] En base al conteo realizado en el punto anterior, observe cómo se comporta la proporción de intervalos de confianza, ¿es acaso este igual al $95\%$ teórico usado para calcularlo?.
+
+**Notar:** Responder cada una de las preguntas señaladas en esta sección.
+
+**Hints**: 
+
+- Para realizar la `sampling distribution` podría serle útil el comando `sample()`.
+- Puede ser útil generar un dataframe para graficar con ggplot2.
+
+<details>
+<summary>Gráfico esperado para intervalos de confianza</summary>
+<p>
+
+Del gráfico es posible observar que la línea punteada es la media de la población y los puntos de colores son las estimaciones con sus respectivos intervalos de confianza. Notar que para el plot no se utilizaron las 5000 veces, se recomienda utilizar 100 valores para visualizar bien el fenómeno.
+
+![](plot1.PNG)
+
+</p>
+</details>  
+
+---
+
+
+**Respuesta:**
+
+```{r, eval=FALSE}
+# Definimos tamaños de muestreo
+tamano_muestra = 30
+n_muestras = 5000
+
+# Generamos una exponencial para luego generar el subsampling de ella
+exponencial = rexp(10000, rate = 2)
+# Obtenemos la media poblacional de la exponencial
+
+# Sampling distribution, calculo del intervalo de confianza y proporción.
+# - En base a la distribución exponencial, generamos multiples sampling 
+# distribution.
+# - Se estima la media del muestreos y obtenemos el intervalo de confianza de 
+# cada una de las muestras
+
+# Plot de Intervalos de confianza (ver respuesta esperada)
+
+# Plot de proporción de Intervalos de confianza
+
+```
+
+---
+
+### Pregunta 3: Estimación de Máxima Verosimilitud
+
+En esta pregunta deberán trabajar con el dataset ``Body Measurements_original.csv``. El objetivo será visualizar e inferir los parámetros que componen a dos variables del dataset. Para esto deberá visualizar el comportamiento de la likelihood, utilizando diferentes cantidades de datos, y realizar la optimización de la likelihood para obtener los estimadores de las variables a través de la función `nlminb()`. Notar que esta pregunta consiste en dos partes.
+
+a) La primera actividad consiste en realizar inferencia sobre la variable ``TotalHeight``, donde deberá asumir y realizar los siguientes puntos:
+
+- [ ] Asuma que los datos de ``TotalHeight`` distribuyen de forma gaussiana. Visualice esto a través de un gráfico de densidad en la variable ``TotalHeight``.
+- [ ] Grafique a través de un gráfico de calor el rango de valores en que se mueve la solución del problema de likelihood, para esto defina su problema en base a -log(likelihood). Mas información se entrega en el esqueleto de la pregunta.
+- [ ] Visualice cómo se comporta la -log(likelihood) con diferentes cantidades de datos para la estimación de $\mu$; para visualizar esto, fije $\sigma$ en 12 y varié solamente el valor de $\mu$. Para observar el comportamiento del estimador con diferentes cantidades de datos, realice un subsampling de 100 datos, 300 datos y la totalidad de los datos de la variable ``TotalHeight``. ¿Qué se puede observar acerca del comportamiento del estimador $\mu$?, responda brevemente esta pregunta.
+- [ ] Finalmente aplique el comando `nlminb()` sobre la likelihood y encuentre el máximo o mínimo del problema a optimizar. Señale implícitamente cuales son los valores obtenidos para $\sigma$ y $\mu$.
+
+b) Para la segunda parte deberá escoger otra de las variables que componen el dataset, como por ejemplo `Age`, y estimar a traves de la -log(likelihood) **solo** los parámetros de la distribución que observa (notar que solo debe inferir los estimadores de variable escogida). Para señalar la distribución de los datos se recomienda realizar el plot de densidad y comparar con el comportamiento de las distribuciones teóricas vistas en clases.
+
+Cabe señalar que el método de máxima verosimilitud deberá ser programado por usted y **no** podrá utilizar librerías que entreguen el valor directo (por ejemplo, la librería MASS).
+
+**Respuesta**
+
+```{r, eval=FALSE}
+# Carga de dataset
+
+# Primera Parte
+# Plot de densidades de la variables TotalHeight
+
+# Plot de Likelihood
+# - Generar una función de la likelihood de la normal
+# - Señalar el rango de valores para observar la solución. Genere un vector con 
+# los valores
+
+# Plotear gráfico de calor a través filled.contour()
+ll_plot <- function(a, b) {
+  # Definimos la likelhood
+  
+}
+
+# Vectorizamos nuestra función para recorrer y estimar los valores
+ll_plot = Vectorize(ll_plot)
+
+mu = ... # definimos secuencia de 20 -> 80 de 0.5 en 0.5.
+sigma = ... # definimos secuencia de 5 -> 23 de 0.5 en 0.5.
+ll_plot = outer(X=mu, Y=sigma, ll_plot)
+
+# Obtenemos el mapa de calor con los valores mas probables
+filled.contour(x=mu, y=sigma, z=ll_plot, xlab=expression(mu), 
+               ylab=expression(sigma))
+
+# Plot de comportamiento de SOLO mu al variar la cantidad de datos
+
+
+
+# Obtener la solución que minimiza o maximiza la likelihood
+# Producto de como funcionan nlminb es necesario definir un nuevo tipo de función
+# para encontrar los parametros de la likelihood, por favor revisar estructura entregada.
+likelihood <- function(param) {
+  # Definimos los parámetros de entrada de la función
+  mu = param[1]
+  sigma = param[2]
+  # Definimos la likelihood como la suma logaritmica de la función de densidad
+  
+}
+
+# Optimizador para encontrar los parametros de la likelihood. Referencia: https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/nlminb
+nlminb(objective=likelihood, start= , lower= , upper= )
+
+# Segunda Parte
+# Graficar la densidad y obtener el parámetro de la variable propuesta.
+```
+
+---
+
+### Pregunta 4: Bootstrap
+
+Para esta pregunta será necesario cargar el dataset `SAT_GPA.csv`, con el que estudiaremos la correlación entre las variables SAT y GPA. Dentro de las variables: GPA representa el rendimiento académico de un estudiante en el sistema estadounidense, mientras que SAT es una prueba de admisión universitaria en estados unidos.
+Las actividades por realizar en esta pregunta son las siguientes:
+
+- [ ] Visualizar la correlación de los datos.
+- [ ] Obtener la correlación entre los datos de las variables ``Total``, quien representa el resultado de la prueba SAT en USA, y la variable ``GPA``.
+- [ ] Programar el método Bootstrap para calcular el error estándar de la correlación. Para la simulación utilice un numero de muestras (B) igual a 5000 o algún otro numero de este orden.
+- [ ] Visualizar a través de un gráfico el histograma obtenido al realizar el muestreo con Bootstrap.
+- [ ] Obtener el 95% de intervalo de confianza de la estimación por cuantiles como se vio en clases.
+
+**Nota:** No se permite la utilización de librerías de bootstrap para esta parte.
+
+**Respuesta:**
+
+---
+
+&nbsp;
+<hr />
+<p style="text-align: center;">A work by <a href="https://github.com/dccuchile/CC6104">CC6104</a></p>
+
+<!-- Add icon library -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
+
+<!-- Add font awesome icons -->
+<p style="text-align: center;">
+    <a href="https://github.com/dccuchile/CC6104"><i class="fab fa-github" style='font-size:30px'></i></a>
+    <a href="https://discord.gg/XCbQvGs3Uf"><i class="fab fa-discord" style='font-size:30px'></i></a>
+</p>
+
+
+
+&nbsp;
