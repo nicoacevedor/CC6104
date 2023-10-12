@@ -271,55 +271,165 @@ Cabe señalar que el método de máxima verosimilitud deberá ser programado por
 
 **Respuesta**
 
-```{r, eval=FALSE}
-# Carga de dataset
+Primero, visualicemos la densidad de la variable ``TotalHeight``
 
-# Primera Parte
-# Plot de densidades de la variables TotalHeight
+```{r}
+data_raw <- read.csv("Body Measurements _ original.csv")
 
-# Plot de Likelihood
-# - Generar una función de la likelihood de la normal
-# - Señalar el rango de valores para observar la solución. Genere un vector con 
-# los valores
+totalheight_plot <- ggplot(
+  data = data_raw,
+  aes(x = TotalHeight, color = "density")
+)
 
-# Plotear gráfico de calor a través filled.contour()
-ll_plot <- function(a, b) {
-  # Definimos la likelhood
-  
-}
+totalheight_dens <- geom_density(color = "#67B7D1")
 
-# Vectorizamos nuestra función para recorrer y estimar los valores
-ll_plot = Vectorize(ll_plot)
+totalheight_hist <- geom_histogram(
+  aes(y = after_stat(density)),
+  bins = 10,
+  fill = "#67B7D1",
+  alpha = 0.5
+)
 
-mu = ... # definimos secuencia de 20 -> 80 de 0.5 en 0.5.
-sigma = ... # definimos secuencia de 5 -> 23 de 0.5 en 0.5.
-ll_plot = outer(X=mu, Y=sigma, ll_plot)
-
-# Obtenemos el mapa de calor con los valores mas probables
-filled.contour(x=mu, y=sigma, z=ll_plot, xlab=expression(mu), 
-               ylab=expression(sigma))
-
-# Plot de comportamiento de SOLO mu al variar la cantidad de datos
+final_plot <- totalheight_plot + totalheight_dens + totalheight_hist +
+  ylab("") + xlab("") + scale_color_manual(values = c("density" = "#67B7D1"))
 
 
-
-# Obtener la solución que minimiza o maximiza la likelihood
-# Producto de como funcionan nlminb es necesario definir un nuevo tipo de función
-# para encontrar los parametros de la likelihood, por favor revisar estructura entregada.
-likelihood <- function(param) {
-  # Definimos los parámetros de entrada de la función
-  mu = param[1]
-  sigma = param[2]
-  # Definimos la likelihood como la suma logaritmica de la función de densidad
-  
-}
-
-# Optimizador para encontrar los parametros de la likelihood. Referencia: https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/nlminb
-nlminb(objective=likelihood, start= , lower= , upper= )
-
-# Segunda Parte
-# Graficar la densidad y obtener el parámetro de la variable propuesta.
+ggplotly(final_plot) %>%
+  layout(
+    xaxis = list(title = "TotalHeight"),
+    yaxis = list(title = "Frequency")
+  )
 ```
+
+Claramente se aprecia que esta variable se asemeja mucho a una distribución normal. Ahora, veamos un gráfico de calor para visualizar el comportamiento de $\mu$ y $\sigma$.
+
+```{r}
+likelihood <- function(mu, sigma, sub = NULL) {
+  x_org <- data_raw$TotalHeight
+  if (is.null(sub))
+    x <- x_org
+  else
+    x <- sample(x_org, sub)
+  n <- length(x)
+  x_mean <- mean(x)
+  x_var <- var(x)
+  first_sum <- (n * x_var) / (2 * sigma^2)
+  second_sum <- (n * (x_mean - mu)^2) / (2 * sigma^2)
+
+  -n * log(sigma) - first_sum - second_sum
+}
+
+mu <- seq(from = 20, to = 80, by = 0.5)
+sigma <- seq(from = 5, to = 23, by = 0.5)
+ll_plot <- Vectorize(likelihood)
+ll_plot <- outer(X = mu, Y = sigma, ll_plot)
+
+filled.contour(x = mu, y = sigma, z = ll_plot,
+               xlab = expression(mu), ylab = expression(sigma))
+```
+
+Se puede apreciar que, muy probablemente, se tiene $\mu \in (40, 60)$ y $\sigma \in (5, 10)$. 
+
+Ahora, fijemos $\sigma = 12$ y variemos el valor de $\mu$
+```{r}
+sigma <- 12
+p <- plot_ly(x = mu, y = likelihood(mu, sigma, 100),
+             type = "scatter", name = "100 datos")
+p <- add_trace(p, y = likelihood(mu, sigma, 300), name = "300 datos")
+p <- add_trace(p, y = likelihood(mu, sigma), name = "Todos los datos")
+p <- p %>% layout(title = "Likelihood para valores de mu y sigma = 12",
+  xaxis = list(title = "mu"),
+  yaxis = list(title = "valor de likelihood")
+)
+p
+```
+Se puede apreciar que el máximo valor de la función likelihood disminuye mientras aumenta la cantidad de datos considerada. No obstante, esto no influye en el óptimo para $\mu$, ya que este sigue siendo el mismo para cualquier cantidad de datos ya que la variable es la misma.
+
+Minimicemos la función likelihood para encontrar los valores de $\mu$ y $\sigma$.
+```{r}
+# Primero, redefinimos la función likelihood para aplicar nlminb
+likelihood <- function(param) {
+  mu <- param[1]
+  sigma <- param[2]
+  x <- data_raw$TotalHeight
+  n <- length(x)
+  x_mean <- mean(x)
+  x_var <- var(x)
+  first_sum <- (n * x_var) / (2 * sigma^2)
+  second_sum <- (n * (x_mean - mu)^2) / (2 * sigma^2)
+
+  n * log(sigma) + first_sum + second_sum
+}
+
+# Aplicamos nlminb
+MLE <- nlminb(
+  objective = likelihood, 
+  start = c(10, 10), 
+  lower = c(0.001, 0.001), 
+  upper = c(500, 500)
+)
+cat("mu = ", MLE$par[1], ", sigma = ", MLE$par[2])
+```
+
+De aquí obtenemos que los valores son $\mu = 48.118$ y $\sigma = 12.156$. 
+
+Ahora, trabajaremos con la variable ``ShoulderToWaist``. Veamos su densidad:
+```{r}
+data_plot <- ggplot(
+  data = data_raw,
+  aes(x = ShoulderToWaist, color = "density")
+)
+
+data_dens <- geom_density(color = "#67B7D1")
+
+data_hist <- geom_histogram(
+  aes(y = after_stat(density)),
+  bins = 10,
+  fill = "#67B7D1",
+  alpha = 0.5
+)
+
+final_plot <- data_plot + data_dens + data_hist +
+  ylab("") + xlab("") + scale_color_manual(values = c("density" = "#67B7D1"))
+
+
+ggplotly(final_plot) %>%
+  layout(
+    xaxis = list(title = "ShoulderToWaist"),
+    yaxis = list(title = "Frequency")
+  )
+```
+
+Notemos que esta variable también se asemeja a una distribución normal. Usando el mismo método, se ve el mapa de calor y se calculan los valores óptimos.
+```{r}
+likelihood <- function(mu, sigma) {
+  x <- data_raw$ShoulderToWaist
+  sum(log(dnorm(x, mean = mu, sd = sigma)))
+}
+
+mu <- seq(from = 10, to = 30, by = 0.5)
+sigma <- seq(from = 3, to = 10, by = 0.5)
+ll_plot <- Vectorize(likelihood)
+ll_plot <- outer(X = mu, Y = sigma, ll_plot)
+
+filled.contour(x = mu, y = sigma, z = ll_plot,
+               xlab = expression(mu), ylab = expression(sigma))
+
+
+# Se redefine la función likelihood para usar nlminb
+likelihood <- function(param) {
+  mu <- param[1]
+  sigma <- param[2]
+  x <- data_raw$ShoulderToWaist
+  -sum(log(dnorm(x, mean = mu, sd = sigma)))
+}
+
+MLE <- nlminb(objective = likelihood, start = c(10, 10), lower = c(0.001, 0.001), upper = c(500, 500))
+
+cat("mu = ", MLE$par[1], ", sigma = ", MLE$par[2])
+```
+
+De aquí obtenemos que los valores encontrados son $\mu = 17.9$ y $\sigma = 5.375$.
 
 ---
 
