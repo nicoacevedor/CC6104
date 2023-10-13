@@ -232,26 +232,125 @@ Del gráfico es posible observar que la línea punteada es la media de la poblac
 **Respuesta:**
 
 ```{r, eval=FALSE}
-# Definimos tamaños de muestreo
-tamano_muestra = 30
-n_muestras = 5000
+#########100 Simulaciones##############
+# Paso 1: Generar datos de una distribución exponencial (población)
+tamano_poblacion <- 10000
+poblacion <- rexp(tamano_poblacion, rate = 0.5)
+media_poblacion <- mean(poblacion)
+print(media_poblacion)
 
-# Generamos una exponencial para luego generar el subsampling de ella
-exponencial = rexp(10000, rate = 2)
-# Obtenemos la media poblacional de la exponencial
+# Paso 2: Realizar una sampling distribution de la media
+tamano_muestra <- 30
+num_simulaciones <- 100
+medias_muestrales <- c()
 
-# Sampling distribution, calculo del intervalo de confianza y proporción.
-# - En base a la distribución exponencial, generamos multiples sampling 
-# distribution.
-# - Se estima la media del muestreos y obtenemos el intervalo de confianza de 
-# cada una de las muestras
+for (i in 1:num_simulaciones) {
+  muestra_indices <- sample(poblacion, size = tamano_muestra, replace = FALSE)
+  medias_muestrales[i] <- mean(muestra_indices)
+}
 
-# Plot de Intervalos de confianza (ver respuesta esperada)
 
-# Plot de proporción de Intervalos de confianza
+# Paso 3: Calcular el intervalo de confianza del 95%
+alpha <- 0.05
+sigma <- 2
+se <- sigma/sqrt(tamano_muestra)
+error <- qnorm(1 - alpha/2) * se
+left <- medias_muestrales - error
+right <- medias_muestrales + error
+
+
+# Paso 4: Crear un dataframe para ggplot2
+data <- data.frame(
+  Value = medias_muestrales,
+  Label = c(1:num_simulaciones),
+  LowerCI = left,
+  UpperCI = right,
+  central = media_poblacion  # Media de los datos (mu)
+)
+valor_central = data$central
+
+# Paso 5: Graficar las medias obtenidas junto con sus intervalos de confianza
+# Crea el gráfico de intervalo de confianza en vertical con segmentos de error y leyenda
+ggplot(data, aes(y = Label, x = Value, color = abs(Value - central) < (UpperCI - LowerCI) / 2)) +
+  geom_vline(xintercept = valor_central, linetype = "dotted", color = "black", size = 1.5) +
+  geom_point(size = 3) +
+  scale_color_manual(values = c("FALSE" = "red", "TRUE" = "green"),
+                     labels = c("FALSE" = "out", "TRUE" = "in")) +
+  geom_segment(aes(xend = UpperCI, yend = Label, x = LowerCI), lineend = "square") +
+  
+  labs(
+    title = "Gráfico de Intervalo de Confianza",
+    x = "Valor",
+    y = "Etiqueta"
+  ) +
+  guides(color = guide_legend(title = "Tipo"))  # Título de la leyenda
+
+
+#########5000 Simulaciones#############
+# Paso 1: Generar datos de una distribución exponencial (población)
+tamano_poblacion <- 10000
+poblacion <- rexp(tamano_poblacion, rate = 0.5)
+media_poblacion <- mean(poblacion)
+
+# Paso 2: Realizar una sampling distribution de la media
+tamano_muestra <- 30
+num_simulaciones <- 5000
+medias_muestrales <- c()
+
+for (i in 1:num_simulaciones) {
+  muestra_indices <- sample(poblacion, size = tamano_muestra, replace = FALSE)
+  medias_muestrales[i] <- mean(muestra_indices)
+}
+
+
+# Paso 3: Calcular el intervalo de confianza del 95%
+alpha <- 0.05
+sigma <- 2
+se <- sigma/sqrt(tamano_muestra)
+error <- qnorm(1 - alpha/2) * se
+left <- medias_muestrales - error
+right <- medias_muestrales + error
+
+
+# Paso 4: Crear un dataframe para ggplot2
+data <- data.frame(
+  Value = medias_muestrales,
+  Label = c(1:num_simulaciones),
+  LowerCI = left,
+  UpperCI = right,
+  central = media_poblacion  # Media de los datos (mu)
+)
+valor_central = data$central
+
+# Paso 5: Graficar las medias obtenidas junto con sus intervalos de confianza
+# Crea el gráfico de intervalo de confianza en vertical con segmentos de error y leyenda
+ggplot(data, aes(y = Label, x = Value, color = abs(Value - central) < (UpperCI - LowerCI) / 2)) +
+  geom_vline(xintercept = valor_central, linetype = "dotted", color = "black", size = 1.5) +
+  geom_point(size = 3) +
+  scale_color_manual(values = c("FALSE" = "red", "TRUE" = "green"),
+                     labels = c("FALSE" = "out", "TRUE" = "in")) +
+  geom_segment(aes(xend = UpperCI, yend = Label, x = LowerCI), lineend = "square") +
+  
+  labs(
+    title = "Gráfico de Intervalo de Confianza",
+    x = "Valor",
+    y = "Etiqueta"
+  ) +
+  guides(color = guide_legend(title = "Tipo"))  # Título de la leyenda
+
+# Contar los valores en verde (dentro del intervalo de confianza)
+valores_verdes <- sum(abs(data$Value - data$central) < (data$UpperCI - data$LowerCI) / 2)
+
+# Calcular la proporción de valores en verde
+proporcion_verdes <- valores_verdes / num_simulaciones
+
+# Imprimir los resultados
+cat("Valores en verde (dentro del intervalo de confianza):", valores_verdes, "\n")
+cat("Proporción de valores en verde:", proporcion_verdes, "\n")
+
 
 ```
-
+Como se ve en los resultados numericos el porcentaje de valores en verde es muy similar al valor del intervalo de confianza solicitado, y cada vez que se repite el experimento se acerca siempre.
 ---
 
 ### Pregunta 3: Estimación de Máxima Verosimilitud
