@@ -547,6 +547,64 @@ Las actividades por realizar en esta pregunta son las siguientes:
 
 **Respuesta:**
 
+```{r}
+my.frame <- read.table(file = "SAT_GPA.csv",header = TRUE,sep = ",", fileEncoding = "latin1")
+# Obtener los valores de las variables SAT y GPA
+sat_scores <- my.frame$Total
+gpa_scores <- my.frame$Gpa
+
+# 1. Visualizar la correlación de los datos
+correlation_data <- cor(my.frame)
+print(correlation_data)
+cat("\n")
+
+
+# 2. Visualizar la correlación de los datos
+correlation_var <- cor(sat_scores, gpa_scores)
+cat("Correlación entre SAT y GPA:", correlation_var, "\n")
+
+# 3. Metodo bootstrap para calcular el error estandar de la correlacion
+myboot<-function(x,y,fun,nRuns,sampleSize,alpha){
+  
+  values<-vector()
+  
+  for(i in 1:nRuns){
+    
+    samp.i<-sample(x, size = sampleSize, replace = TRUE)
+    samp.j<-sample(y, size = sampleSize, replace = TRUE)
+    values[i]<-fun(samp.i,samp.j)
+    
+  }
+  
+
+  point.est <-fun(x,y)
+  
+  # error estandar
+  se <- sd(values)
+  
+  # 4. Visualizar el grafico de Histograma
+  hist(values,main = "Histograma de correlaciones", xlab="Correlacion",ylab = "Frecuencia")
+  
+  
+  #5. Obtener el 95% de intervalo de confianza de la estimación por cuantiles
+  l.CI <- quantile(values, alpha/2)
+  
+  u.CI <- quantile(values, 1-alpha/2)
+
+  
+  return(c("Point Estimate"=point.est,
+  "Standard error"=se,
+  "Lower CI limit" = l.CI,
+  "Upper CI limit" = u.CI))
+}
+
+cat("\n")
+
+myboot(sat_scores,gpa_scores,cor,5000,100,0.05)
+```
+
+
+
 ---
 
 &nbsp;
