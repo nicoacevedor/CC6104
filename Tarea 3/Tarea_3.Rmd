@@ -423,6 +423,9 @@ b) Estudie si el modelo multivariable posee mejor desempeño que el modelo simpl
 
 **Nota:** No esta permitido utilizar comandos que obtengan los valores solicitados directamente a menos que se le permita en la pregunta.
 
+
+**Desarrollo:**
+
 El modelo lineal está implementado usando la formulación matemática de los coefficientes: $$\hat{\beta_1} = \frac{\sum\limits_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}{\sum\limits_{i=1}^n (x_i - \bar{x})^2}\\ \hat{\beta_0} = \bar{y} - \hat{\beta_1}\bar{x}$$
 donde $\hat{\beta_0}$ es el intercepto y $\hat{\beta_1}$ es la pendiente de la recta.
 
@@ -519,7 +522,76 @@ R2_non_smoker <- 1 - (SSE_non_smoker / SST_non_smoker)
 print(sprintf("R2 for 'non_smoker': %.3f", R2_non_smoker))
 ```
 
+Ahora el coeficiente $\bar{R^2}$, o $R^2$ ajustado
+```{r, eval=TRUE}
+# Coeficiente R2 ajustado para 'smokers'
+n_smoker <- length(y_smoker)
+R2_adj_smoker <- 1 - (1 - R2_smoker) * (n_smoker - 1) / (n_smoker - 2)
+print(sprintf("R2 ajustado for 'smoker': %.3f", R2_adj_smoker))
 
+# Coeficiente R2 ajustado para 'non_smokers'
+n_non_smoker <- length(y_non_smoker)
+R2_adj_non_smoker <- 1 - (1 - R2_non_smoker) * (n_non_smoker - 1) / (n_non_smoker - 2)
+print(sprintf("R2 ajustado for 'non_smoker': %.3f", R2_adj_non_smoker))
+```
+
+Ahora, se implementará el modelo lineal con dos variables.
+Para esto, se modificó la función que encuentra las variables con mayor correlación con la variable `charges` y la función que encuentra el modelo lineal, ya que ahora para encontrar el vector $\hat{\beta}$ se usó la siguiente ecuación: $$\hat{\beta} = (X^TX)^{-1}XY$$
+
+```{r, eval=TRUE}
+get_max_correlation_column <- function(df, column) {
+  cor_df <- as.data.frame(as.table(cor(df)))
+  cor_df <- cor_df[cor_df$Var1 == column, ]
+  cols <- c("Var1", "Var2")
+  cor_df[cols] <- lapply(cor_df[cols], as.character)
+  max_cor_1 <- max(abs(cor_df[cor_df$Freq != 1, ]$Freq))
+  next_max <- abs(cor_df$Freq) < abs(max_cor_1)
+  max_cor_2 <- max(abs(cor_df[next_max, ]$Freq))
+  variable_1 <- cor_df[abs(cor_df$Freq) == max_cor_1, ]$Var2
+  variable_2 <- cor_df[abs(cor_df$Freq) == max_cor_2, ]$Var2
+  list("var1" = variable_1, "var2" = variable_2)
+}
+
+linear_regression_multivar <- function(data, target) {
+  matrix_data <- data.matrix(data)
+  colnames(matrix_data) <- NULL
+  beta <- solve(t(matrix_data) %*% matrix_data) %*% t(matrix_data) %*% target
+  list("beta_0" = beta[1], "beta_1" = beta[2], "beta_2" = beta[3])
+}
+```
+
+Luego se entrenó el modelo
+```{r, eval=TRUE}
+smoker_variables <- get_max_correlation_column(smoker, "charges")
+non_smoker_variables <- get_max_correlation_column(non_smoker, "charges")
+
+# Entrenamiento para 'smoker'
+x_smoker <- data.matrix(smoker[, names(smoker) %in% smoker_variables])
+# Se agrega una columna de 1's al principio
+x_smoker <- cbind(rep(1, nrow(x_smoker)), x_smoker)
+y_smoker <- smoker[, "charges"]
+reg_smoker <- linear_regression_multivar(x_smoker, y_smoker)
+beta_smoker <- unlist(reg_smoker)
+y_hat_smoker <- x_smoker %*% beta_smoker
+SST_smoker <- sum((y_smoker - mean(y_smoker))^2)
+SSE_smoker <- sum((y_smoker - y_hat_smoker)^2)
+R2_smoker <- 1 - (SSE_smoker / SST_smoker)
+n_smoker <- length(y_smoker)
+R2_adj_smoker <- 1 - (1 - R2_smoker) * (n_smoker - 1) / (n_smoker - 2)
+writeLines(sprintf("R2 for 'smoker': %.3f\nR2 ajustado for 'smoker': %.3f", R2_smoker, R2_adj_smoker))
+
+# Entrenamiento para 'non_smoker'
+x_non_smoker <- data.matrix(non_smoker[, names(non_smoker) %in% non_smoker_variables])
+# Se agrega una columna de 1's al principio
+x_non_smoker <- cbind(rep(1, nrow(x_non_smoker)), x_non_smoker)
+y_non_smoker <- non_smoker[, "charges"]
+reg_non_smoker <- linear_regression_multivar(x_non_smoker, y_non_smoker)
+beta_non_smoker <- unlist(reg_non_smoker)
+y_hat_non_smoker <- x_non_smoker %*% beta_non_smoker
+n_non_smoker <- length(y_non_smoker)
+R2_adj_non_smoker <- 1 - (1 - R2_non_smoker) * (n_non_smoker - 1) / (n_non_smoker - 2)
+writeLines(sprintf("R2 for 'non_smoker': %.3f\nR2 ajustado for 'non_smoker': %.3f", R2_non_smoker, R2_adj_non_smoker))
+```
 
 
 &nbsp;
