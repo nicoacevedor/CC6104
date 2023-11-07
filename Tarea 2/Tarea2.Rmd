@@ -231,7 +231,7 @@ Del gráfico es posible observar que la línea punteada es la media de la poblac
 
 **Respuesta:**
 
-```{r, eval=FALSE}
+```{r}
 #########100 Simulaciones##############
 # Paso 1: Generar datos de una distribución exponencial (población)
 tamano_poblacion <- 10000
