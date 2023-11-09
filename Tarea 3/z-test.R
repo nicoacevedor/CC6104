@@ -1,8 +1,8 @@
-data <- read.csv("marketing_campaign.csv", sep = "\t")
+df <- read.csv("marketing_campaign.csv", sep = "\t")
 
-graduation <- data[data$Education == "Graduation", "Income"]
-master <- data[data$Education == "Master", "Income"]
-phd <- data[data$Education == "PhD", "Income"]
+graduation <- df[df$Education == "Graduation", "Income"]
+master <- df[df$Education == "Master", "Income"]
+phd <- df[df$Education == "PhD", "Income"]
 
 std_grad <- 28180
 std_master <- 20160
@@ -11,8 +11,8 @@ std_phd <- 20615
 
 z_test <- function(data1 = NULL, data1_name = NULL, sigma1 = 0.5,
                    data2 = NULL, data2_name = NULL, sigma2 = 0.5,
-                   mu = 0, test_type = c("one-sided", "two-sided"),
-                   verbose = TRUE) {
+                   mu1 = 0, mu2 = 0, verbose = TRUE,
+                   test_type = c("one-sided", "two-sided")) {
 
   # Condiciones para evitar errores en la función
   length_test_type_condition <- length(test_type) == 1
@@ -33,14 +33,16 @@ z_test <- function(data1 = NULL, data1_name = NULL, sigma1 = 0.5,
 
   # Z-Score
   if (is.null(data2)) {
-    z_score <- (mean(data1, na.rm = TRUE) - mu) / (sigma1 * sqrt(length(data1)))
+    mean_data <- mean(data1, na.rm = TRUE)
+    z_score <- (mean_data - mu1) / (sigma1 * sqrt(length(data1)))
     output <- "One"
   } else {
-    mu_1 <- mean(data1, na.rm = TRUE)
-    mu_2 <- mean(data2, na.rm = TRUE)
+    mean_data1 <- mean(data1, na.rm = TRUE)
+    mean_data2 <- mean(data2, na.rm = TRUE)
     n_1 <- length(data1)
     n_2 <- length(data2)
-    z_score <- (mu_1 - mu_2) / sqrt(sigma1^2 / n_1 + sigma2^2 / n_2)
+    mean_diff <- (mean_data1 - mean_data2) - (mu1 - mu2)
+    z_score <- mean_diff / sqrt(sigma1^2 / n_1 + sigma2^2 / n_2)
 
     # Nombre data2
     output <- "Two"
@@ -95,6 +97,7 @@ z_test_multiple_testing <- function(data = NULL, sigma = NULL,
 
   # Nombres de los datos estudiados
   data_names <- sapply(substitute(data), deparse)[-1]
+  m <- length(data_names)
 
   # Cálculo del p-value para cada par de datos
   indexes <- seq_along(data)
@@ -112,18 +115,21 @@ z_test_multiple_testing <- function(data = NULL, sigma = NULL,
         test_type = test_type, verbose = verbose
       )
       key <- paste(var1, "_", var2, sep = "")
-      p_value_list[key] <- p_value
+      p_value_bonferroni <- p_value * m  # Correción de Bonferroni
+      p_value_list[key] <- p_value_bonferroni
     }
   }
 
   return(p_value_list)
 }
 
-results <- z_test_multiple_testing(
-  data = list(graduation, master, phd),
-  sigma = c(std_grad, std_master, std_phd),
-  test_type = "two-sided",
-  verbose = TRUE
-)
+# results <- z_test_multiple_testing(
+#   data = list(graduation, master, phd),
+#   sigma = c(std_grad, std_master, std_phd),
+#   test_type = "two-sided",
+#   verbose = TRUE
+# )
 
-print(results)
+print(p_value <- z_test(data1 = graduation, mu1 = 52000,
+            test_type = "two-sided", sigma1 <- 28180,
+            data1_name = "graduation"))

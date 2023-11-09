@@ -279,77 +279,190 @@ $$\sigma_{PhD} = 20615$$
 
 **Respuesta:**
 
-```{r}
+Importación y primera visualización de los datos
+
+```{r, eval = TRUE}
 df = read.csv('marketing_campaign.csv', sep='\t')
+graduation <- df[df$Education == "Graduation", "Income"]
+master <- df[df$Education == "Master", "Income"]
+phd <- df[df$Education == "PhD", "Income"]
 head(df)
+```
 
+Definición de la función `z_test`
+
+```{r, eval = TRUE}
 # Implementación de Z-test one-sided y two-sided
-# Puede utilizar este esqueleto
-z_test <- function(data1=NULL, sigma1=0.5, data2=NULL, sigma2=0.5, 
-                   mu.Ha=0, test.type = c('one-sided','two-sided'),
-                   verbose=TRUE){
-  
-  if(length(test.type)>=2){
-    print("Por favor escoge un tipo de Test: ´one-sided´ o ´two-sided´ ")
+z_test <- function(data1 = NULL, data1_name = NULL, sigma1 = 0.5,
+                   data2 = NULL, data2_name = NULL, sigma2 = 0.5,
+                   mu1 = 0, mu2 = 0, verbose = TRUE,
+                   test_type = c("one-sided", "two-sided")) {
+
+  # Condiciones para evitar errores en la función
+  length_test_type_condition <- length(test_type) == 1
+  name_test_type_condition <- (test_type %in% c("menor", "mayor", "two-sided"))
+  if (!(length_test_type_condition && name_test_type_condition)) {
+    print("Por favor escoge un tipo de Test: ´mayor´, ´menor´ o ´two-sided´ ")
+    return()
+  } else if (is.null(data1)) {
+    print("Por favor ingresa algún valor en data1")
     return()
   }
-  else if(length(test.type)==1 && !(test.type %in% c('menor','mayor','two-sided'))){
-    print("Por favor escoge un tipo de Test: ´menor´, ´mayor´ o ´two-sided´")
-    return()
-  }
-  else if(is.null(data2)){
-    
-    # P-value
-    if(test.type=='menor'){
 
-    }
-    else if(test.type=='mayor'){
+  # Nombre data1
+  if (is.null(data1_name))
+    data_deparse <- deparse(substitute(data1))
+  else
+    data_deparse <- data1_name
 
-    }
-    else if(test.type=='two-sided'){
+  # Z-Score
+  if (is.null(data2)) {
+    mean_data <- mean(data1, na.rm = TRUE)
+    z_score <- (mean_data - mu1) / (sigma1 * sqrt(length(data1)))
+    output <- "One"
+  } else {
+    mean_data1 <- mean(data1, na.rm = TRUE)
+    mean_data2 <- mean(data2, na.rm = TRUE)
+    n_1 <- length(data1)
+    n_2 <- length(data2)
+    mean_diff <- (mean_data1 - mean_data2) - (mu1 - mu2)
+    z_score <- mean_diff / sqrt(sigma1^2 / n_1 + sigma2^2 / n_2)
 
-    }
-    
-    # Texto de Salida
-    if(verbose){
-      cat("\tOne-sample Z-Test:\n\nData analizada:",
-                      deparse(substitute(data1)), "\nZ=", Z_score, 
-                      "P-value=", p_value, "\n\n",sep=" ")
-    }
-    
-    return(p_value)
-    
+    # Nombre data2
+    output <- "Two"
+    if (is.null(data2_name))
+      data_deparse <- paste(data_deparse, "y", deparse(substitute(data2)))
+    else
+      data_deparse <- paste(data_deparse, "y", data2_name)
   }
-  else if(!is.null(data2)){
-    # Hypothesis test
-    
-    # p-value
-    if(test.type=='menor'){
-      p_value = ...
-    }
-    else if(test.type=='mayor'){
-      p_value = ...
-    }
-    else if(test.type=='two-sided'){
-      p_value = ...
-    }
-    # Texto de Salida
-    if(verbose){
-      cat("\tTwo-sample Z-Test:\n\nData analizada:",
-                      deparse(substitute(data1)),"y",
-                      deparse(substitute(data2)), "\nZ=", 
-                      Z_score, "P-value=", p_value, "\n\n",sep=" ")
-    }
-  
-    return(p_value)
+
+  # P-Value
+  if (test_type == "menor")
+    p_value <- pnorm(z_score)
+
+  else if (test_type == "mayor")
+    p_value <- 1 - pnorm(z_score)
+
+  else if (test_type == "two-sided")
+    p_value <- 2 * pnorm(-abs(z_score))
+
+  # Texto de Salida
+  if (verbose) {
+    cat("\n\t", output, "-sample Z-Test:\n\nData analizada: ",
+      data_deparse, "\nZ = ", z_score,
+      " P-value = ", p_value,
+      "\n\n", sep = ""
+    )
   }
+
+  return(p_value)
 }
 ```
 
-```{r}
-z.test.multiple_testing <- function(){
+Implementación de la función `z_test_multiple_testing`, la cual llama a la función anterior `z_test`
+```{r, eval = TRUE}
+z_test_multiple_testing <- function(data = NULL, sigma = NULL,
+                                    test_type = c("one-sided", "two-sided"),
+                                    verbose = TRUE) {
+
+  # Condiciones para evitar errores en la función
+  length_test_type_condition <- length(test_type) == 1
+  name_test_type_condition <- (test_type %in% c("menor", "mayor", "two-sided"))
+  nullity_condition <- is.null(data) || is.null(sigma)
+  dimension_condition <- !nullity_condition && (length(data) == length(sigma))
+  if (!(length_test_type_condition && name_test_type_condition)) {
+    print("Por favor escoge un tipo de Test: ´mayor´, ´menor´ o ´two-sided´ ")
+    return()
+  } else if (!dimension_condition) {
+    cat(
+      "Cantidad incompatible de datos y sigmas\n",
+      "length(data) = ", length(data), "\n",
+      "length(sigma) = ", length(sigma), "\n\n", sep = ""
+    )
+  }
+
+  # Nombres de los datos estudiados
+  data_names <- sapply(substitute(data), deparse)[-1]
+  m <- length(data_names)
+
+  # Cálculo del p-value para cada par de datos
+  indexes <- seq_along(data)
+  p_value_list <- list()
+  for (i in indexes) {
+    for (j in indexes) {
+      if (j <= i)
+        next
+      var1 <- data_names[i]
+      var2 <- data_names[j]
+      p_value <- z_test(
+        data1 = data[[i]], data2 = data[[j]],
+        data1_name = var1, data2_name = var2,
+        sigma1 = sigma[i], sigma2 = sigma[j],
+        test_type = test_type, verbose = verbose
+      )
+      key <- paste(var1, "_", var2, sep = "")
+      p_value_bonferroni <- p_value * m  # Correción de Bonferroni
+      p_value_list[key] <- p_value_bonferroni
+    }
+  }
+
+  return(p_value_list)
 }
 ```
+
+Para realizar el primer experimento, el cual consiste en determinar si la media de la variable `Graduation` es similar a 52000, realizaremos 3 tests de hipótesis, siempre considerando que $\mu_{Grad}$ es la media de la variable `Graduation`, $\mu_0 = 52000$ y $\alpha = 0.05$.
+
+Para el primer test, se usarán las siguientes hipótesis: 
+$$H_0 : \mu_{Grad} = 52000$$
+$$H_a : \mu_{Grad} \neq 52000$$
+
+Para este test, ya que la hipótesis nula $H_0$ tiene una igualdad, se utilizará un test de dos colas.
+
+```{r, eval = TRUE}
+p_value <- z_test(data1 = graduation, mu1 = 52000,
+            test_type = "two-sided", sigma1 <- 28180,
+            data1_name = "graduation")
+output <- if (p_value <= 0.05) "Se rechaza" else "No se rechaza"
+
+cat(output, "la hipótesis nula a un nivel de 5%")
+```
+
+Para el segundo test, se usarán las siguientes hipótesis: 
+$$H_0 : \mu_{Grad} \geq 52000$$
+$$H_a : \mu_{Grad} < 52000$$
+
+Para este test, ya que la hipótesis nula $H_0$ tiene un $\geq$, se utilizará un test de una cola izquierda.
+
+```{r, eval = TRUE}
+p_value <- z_test(data1 = graduation, mu1 = 52000,
+            test_type = "menor", sigma1 <- 28180,
+            data1_name = "graduation")
+output <- if (p_value <= 0.05) "Se rechaza" else "No se rechaza"
+
+cat(output, "la hipótesis nula a un nivel de 5%")
+```
+
+Finalmente, para el tercer test, se usarán las siguientes hipótesis: 
+$$H_0 : \mu_{Grad} \leq 52000$$
+$$H_a : \mu_{Grad} > 52000$$
+
+Para este test, ya que la hipótesis nula $H_0$ tiene un $\leq$, se utilizará un test de una cola derecha.
+
+```{r, eval = TRUE}
+p_value <- z_test(data1 = graduation, mu1 = 52000,
+            test_type = "mayor", sigma1 <- 28180,
+            data1_name = "graduation")
+output <- if (p_value <= 0.05) "Se rechaza" else "No se rechaza"
+
+cat(output, "la hipótesis nula a un nivel de 5%")
+```
+
+De estos 3 tests se puede concluir que, como la hipótesis nula nunca se rechazó, entonces se acepta como la correcta. Es decir, la media de la variable `Graduation` es similar a 52000.
+
+
+Para estudiar la diferencia entre los ingresos de las personas dependiendo del grado académico, se va a realizar un test múltiple sobre la 
+
+
 
 ### Pregunta 3: Testeando multiples hipotesis y Bonferroni Correction
 
@@ -577,7 +690,7 @@ SST_smoker <- sum((y_smoker - mean(y_smoker))^2)
 SSE_smoker <- sum((y_smoker - y_hat_smoker)^2)
 R2_smoker <- 1 - (SSE_smoker / SST_smoker)
 n_smoker <- length(y_smoker)
-R2_adj_smoker <- 1 - (1 - R2_smoker) * (n_smoker - 1) / (n_smoker - 2)
+R2_adj_smoker <- 1 - (1 - R2_smoker) * (n_smoker - 1) / (n_smoker - 3)
 writeLines(sprintf("R2 for 'smoker': %.3f\nR2 ajustado for 'smoker': %.3f", R2_smoker, R2_adj_smoker))
 
 # Entrenamiento para 'non_smoker'
@@ -589,7 +702,7 @@ reg_non_smoker <- linear_regression_multivar(x_non_smoker, y_non_smoker)
 beta_non_smoker <- unlist(reg_non_smoker)
 y_hat_non_smoker <- x_non_smoker %*% beta_non_smoker
 n_non_smoker <- length(y_non_smoker)
-R2_adj_non_smoker <- 1 - (1 - R2_non_smoker) * (n_non_smoker - 1) / (n_non_smoker - 2)
+R2_adj_non_smoker <- 1 - (1 - R2_non_smoker) * (n_non_smoker - 1) / (n_non_smoker - 3)
 writeLines(sprintf("R2 for 'non_smoker': %.3f\nR2 ajustado for 'non_smoker': %.3f", R2_non_smoker, R2_adj_non_smoker))
 ```
 
