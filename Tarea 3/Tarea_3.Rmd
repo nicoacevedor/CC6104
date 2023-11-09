@@ -383,7 +383,7 @@ z_test_multiple_testing <- function(data = NULL, sigma = NULL,
 
   # Nombres de los datos estudiados
   data_names <- sapply(substitute(data), deparse)[-1]
-  m <- length(data_names)
+  m <- 0
 
   # Cálculo del p-value para cada par de datos
   indexes <- seq_along(data)
@@ -401,11 +401,12 @@ z_test_multiple_testing <- function(data = NULL, sigma = NULL,
         test_type = test_type, verbose = verbose
       )
       key <- paste(var1, "_", var2, sep = "")
-      p_value_bonferroni <- p_value * m  # Correción de Bonferroni
-      p_value_list[key] <- p_value_bonferroni
+      p_value_list[key] <- p_value
+      m <- m + 1
     }
   }
-
+  # Corrección de Bonferroni
+  p_value_list <- lapply(p_value_list, FUN = function(x) x * m)
   return(p_value_list)
 }
 ```
@@ -457,12 +458,39 @@ output <- if (p_value <= 0.05) "Se rechaza" else "No se rechaza"
 cat(output, "la hipótesis nula a un nivel de 5%")
 ```
 
-De estos 3 tests se puede concluir que, como la hipótesis nula nunca se rechazó, entonces se acepta como la correcta. Es decir, la media de la variable `Graduation` es similar a 52000.
+De estos 3 tests se puede concluir que, como la hipótesis nula nunca se rechazó, entonces se acepta como la correcta. Es decir, la media de la variable `Graduation` es similar a 52000.  
+  
+Para estudiar la diferencia entre los ingresos de las personas dependiendo del grado académico, se va a realizar un test múltiple sobre los siguientes conjuntos de hipótesis:  
+
+Sean $\mu_{grad}$, $\mu_{master}$ y $\mu_{phd}$ las medias de los datos y $\alpha = 0.05$
+
+$$\begin{cases} H_1: \mu_{grad} = \mu_{master} \\ \bar{H_1}: \mu_{grad} \neq \mu_{master} \end{cases}$$
+
+$$\begin{cases} H_2: \mu_{grad} = \mu_{phd} \\ \bar{H_2}: \mu_{grad} \neq \mu_{phd} \end{cases}$$
+
+$$\begin{cases} H_3: \mu_{master} = \mu_{phd} \\ \bar{H_3}: \mu_{master} \neq \mu_{phd} \end{cases}$$
 
 
-Para estudiar la diferencia entre los ingresos de las personas dependiendo del grado académico, se va a realizar un test múltiple sobre la 
+```{r, eval = TRUE}
+p_values_list <- z_test_multiple_testing(
+                    data = list(graduation, master, phd),
+                    sigma = c(28180, 20160, 20615),
+                    test_type = "two-sided"
+)
 
+grad_master_text <- if (p_values_list["graduation_master"] <= 0.05) "Se" else "No se"
+grad_phd_text <- if (p_values_list["graduation_phd"] <= 0.05) "Se" else "No se"
+master_phd_text <- if (p_values_list["master_phd"] <= 0.05) "Se" else "No se"
 
+cat("",
+  grad_master_text, "rechaza H_1\n",
+  grad_phd_text, "rechaza H_2\n",
+  master_phd_text, "rechaza H_3\n"
+)
+
+```
+
+Podemos notar que, dadas las hipótesis rechazadas y las que no, la media de los ingresos de las personas con grado `Graduation` es muy cercana a la media de las personas con grado `Master`, pero lejana a la media de las personas con grado `PhD`. No obstante, es importante recalcar que la media de los grado `Master` es cercana también a la media de los grado `PhD`, lo cual nos indica que la media de ingresos de `Master` está entre ambas, y por ello a una "distancia" razonable a las otras dos.
 
 ### Pregunta 3: Testeando multiples hipotesis y Bonferroni Correction
 

@@ -97,7 +97,7 @@ z_test_multiple_testing <- function(data = NULL, sigma = NULL,
 
   # Nombres de los datos estudiados
   data_names <- sapply(substitute(data), deparse)[-1]
-  m <- length(data_names)
+  m <- 0
 
   # Cálculo del p-value para cada par de datos
   indexes <- seq_along(data)
@@ -115,21 +115,22 @@ z_test_multiple_testing <- function(data = NULL, sigma = NULL,
         test_type = test_type, verbose = verbose
       )
       key <- paste(var1, "_", var2, sep = "")
-      p_value_bonferroni <- p_value * m  # Correción de Bonferroni
-      p_value_list[key] <- p_value_bonferroni
+      p_value_list[key] <- p_value
+
+      m <- m + 1
     }
   }
-
+  p_value_list <- lapply(p_value_list, FUN = function(x) x * m)
   return(p_value_list)
 }
 
-# results <- z_test_multiple_testing(
-#   data = list(graduation, master, phd),
-#   sigma = c(std_grad, std_master, std_phd),
-#   test_type = "two-sided",
-#   verbose = TRUE
-# )
+results <- z_test_multiple_testing(
+  data = list(graduation, master, phd),
+  sigma = c(std_grad, std_master, std_phd),
+  test_type = "two-sided",
+  verbose = TRUE
+)
 
-print(p_value <- z_test(data1 = graduation, mu1 = 52000,
-            test_type = "two-sided", sigma1 <- 28180,
-            data1_name = "graduation"))
+# print(p_value <- z_test(data1 = graduation, mu1 = 52000,
+#             test_type = "two-sided", sigma1 <- 28180,
+            # data1_name = "graduation"))
