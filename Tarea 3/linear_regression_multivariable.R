@@ -50,5 +50,3 @@ SSE_smoker <- sum((y_smoker - y_hat_smoker)^2)
 R2_smoker <- 1 - (SSE_smoker / SST_smoker)
 
 print(R2_smoker)
-
-

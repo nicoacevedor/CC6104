@@ -735,6 +735,39 @@ writeLines(sprintf("R2 for 'non_smoker': %.3f\nR2 ajustado for 'non_smoker': %.3
 ```
 
 
+Notemos que para el caso de los datos para fumadores, el coeficiente $\bar{R^2}$ aumenta al agregar una nueva variable a la regresión, lo que indica que el modelo multivariable se desempeña mejor que el univariable en este caso. \
+Para los datos de los no fumadores, el coeficiente $\bar{R^2}$ se mantiene prácticamente igual, lo que indica que no hubo un mejor desempeño y que con el modelo univariable basta para tener una predicción de los datos.    
+
+Veamos ahora qué pasa cuando aplicamos la función `lm()` a ambos conjuntos de datos con las dos variables de entrada.  
+
+Primero, creamos una función que extrae el p-value de un modelo `lm()`
+```{r, eval = TRUE}
+get_p_value <- function(model) {
+  f_stat <- summary(model)$fstatistic
+  p_value <- pf(f_stat[1], f_stat[2], f_stat[3], lower.tail = FALSE)
+  attributes(p_value) <- NULL
+  return(p_value)
+}
+```
+
+Luego, extraemos los p-value para cada caso de los datos divididos en `smoke` con las variables `age` y `bmi`, y `non_smoke` con las variables `age` y `children`
+```{r, eval = TRUE}
+smoker <- data[data$smoker == "yes", names(data) %in% c("age", "bmi", "charges")]
+non_smoker <- data[data$smoker == "no", names(data) %in% c("age", "children", "charges")]
+
+reg_smoke <- lm(formula = charges ~ bmi + age, data = smoker)
+reg_non_smoke <- lm(formula = charges ~ children + age, data = non_smoker)
+
+p_value_smoke <- get_p_value(reg_smoke)
+p_value_non_smoke <- get_p_value(reg_non_smoke)
+
+cat("P-value para 'smoke': ", p_value_smoke, "\n",
+    "P-value para 'non_smoke': ", p_value_non_smoke, "\n",
+    sep = "")
+```
+
+Dado que los p-value de los modelos son muy bajos, podemos afirmar que la regresión lineal es significativa, y que es recomendable utilizar los modelos para valores nuevos entrantes.
+
 &nbsp;
 <hr />
 <p style="text-align: center;">A work by <a href="https://github.com/dccuchile/CC6104">CC6104</a></p>
