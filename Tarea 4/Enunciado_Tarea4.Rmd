@@ -107,21 +107,26 @@ install.packages(c("mvtnorm","loo","coda"), repos="https://cloud.r-project.org/"
 options(repos=c(getOption('repos'), rethinking='http://xcelab.net/R'))
 install.packages('rethinking',type='source')
 ```
+O también con el siguiente script: <https://github.com/dccuchile/CC6104/blob/master/scripts/rethinking_install.R>
 
 ### Preguntas: Introducción a Grid Approximation
 Las primeras dos preguntas de esta tarea tienen como objetivo introducirlos en la inferencia Bayesiana utilizando la técnica Grid Approximation para obtener una aproximación de la posterior. Al finalizar los problemas ustedes deberán ser capaces de visualizar los efectos que tiene el prior en la posterior, saber cómo realizar una Grid Approximation y comprender como utilizar Percentile Interval (PI) en una posterior.
 
 ### Pregunta 1:
 
-Considere el dataset "moneda.csv" donde se encuentran los resultados de un experimento lanzando una moneda, el objetivo de esta pregunta es estudiar mediante técnicas de inferencia Bayesiana el valor de la probabilidad de que salga cara, representado por el valor $1$. Puede usar la librerira rethinking durante toda esta pregunta (si lo desea).
+Considere el dataset "moneda.csv" donde se encuentran los resultados de un experimento lanzando una moneda, el objetivo de esta pregunta es estudiar mediante técnicas de inferencia Bayesiana el valor de la probabilidad de que salga cara  (parámetro $\theta$). En los datos una cara está representada por el valor $1$. Puede usar la librería rethinking durante toda esta pregunta (si lo desea).
 
 ```{r}
 dataMoneda <- read.csv("moneda.csv", header = TRUE)
 ```
 
 
-- [ ] Programe el metodo grid approximation para distintos tamaños de experimento. ¿Como van cambiando las curvas posterior?
+- [ ] Programe el metodo grid approximation para distintos tamaños de experimento. ¿Como van cambiando las curvas posterior? Para esto considere un prior uniforme y como función de likelihood una binomial.
+
 - [ ] Repita el mismo análisis anterior pero utilizando el método de Laplace (no necesita programar el método, puede utilizar la libreria "rethinking"). ¿Como se comparan con los resultados anteriores?.
+
+De aquí en adelante deberán trabajar con muestras del posterior.
+
 - [ ] Grafique la densidad de la posterior y encuentre la proporción de los siguientes defined boundaries:
 
   - [ ] $(0, 0.4)$
@@ -137,9 +142,9 @@ dataMoneda <- read.csv("moneda.csv", header = TRUE)
 
 ---
 
-### Pregunta 2: Grid Approximation y Sample prediction
+### Pregunta 2: Grid Approximation y Posterior Predictive Distribution
 
-El objetivo de esta pregunta es comprender el concepto de `sample prediction` visto en clases y realizar predicciones en base a una posterior. 
+El objetivo de esta pregunta es comprender el concepto de `Posterior Predictive Distribution` visto en clases y realizar predicciones en base a una posterior. 
 
 Un conjunto de carteros aburridos de las mordidas de perros ha decidido realizar un catastro de mordidas recibidas por los empleados de su empresa en un periodo de dos meses, planeando en base a estos datos realizar inferencia bayesiana. Los datos de las mordidas están datos por el dataset `no+mordidas.csv`, en donde cada fila representa las mordidas recibidas por diferentes carteros y las columnas señalan si fue mordido o no el cartero en los meses de estudio (notar que si fue mordido sera señalado con un 1, de lo contrario es señalado con un 0). Cabe señalar que un cartero no puede ser mordido mas de una vez al mes, ya que el damnificado recibe licencia por todos los días restantes del mes tras la mordida, reincorporándose el siguiente mes al trabajo.
 
@@ -150,7 +155,7 @@ head(df)
 
 En base a los datos, realice los siguientes puntos:
 
-- [ ] Realice una *grid approximation* para estimar la probabilidad que un cartero sea mordido, para esto junte los datos del mes 1 y 2 de estudio. Señale el máximo valor de la posterior.
+- [ ] Realice una *grid approximation* para estimar la probabilidad que un cartero sea mordido (parámetro $\theta$), para esto junte los datos del mes 1 y 2 de estudio. Señale el máximo valor de la posterior.Considere un prior uniforme y como función de likelihood una binomial.
 
 - [ ] Utilizando la posterior obtenida en el paso anterior, utilice rbinom para simular 10.000 réplicas de 500 registros de mordidas. Con esto, deberá obtener 10.000 números, cada uno de los cuales es un recuento de las mordidas obtenidas en el registro de datos. Compare la distribución del número de los carteros mordidos predichos con el número real de los datos (248 carteros mordidos de un total de 500 datos). ¿El modelo se ajusta bien a los datos? Es decir, ¿la distribución de las predicciones incluye la observación real como resultado central y probable?
 
@@ -162,7 +167,7 @@ En base a los datos, realice los siguientes puntos:
 
 ### Pregunta 3:
 
-En esta pregunta se trabajara con el dataset "notas.csv" el cual contiene las notas históricas de un curso desconocido. Suponga que los datos vienen de una distribución $\mathcal{N}(\mu,\sigma^2)$, el objetivo de la pregunta es estudiar el comportamiento de los datos y los posibles valores de $\mu,\sigma$ mediante técnicas de inferencia Bayesiana.
+En esta pregunta se trabajará con el dataset "notas.csv" el cual contiene las notas históricas de un curso desconocido. Para esta pregunta asumiremos que una nota $X \sim\mathcal{N}(\mu,\sigma^2)$ y nuestro parámetros objetivos serán: $\mu,\sigma$. El objetivo es contrar la distribución posterior de $\mu$ y $\sigma$ mediante técnicas de inferencia Bayesiana.
 
 Usted sabe un dato extra sobre la información, los valores de $\sigma$ en la grilla se mueven en el intervalo $[0.5,1.5]$ y, además, tiene una fuerte creencia a que es mas probable encontrar la desviación estándar real entre $[0.5,1]$ que en $(1,1.5]$. De hecho, estudios señalan que la probabilidad de encontrar sigma en los valores $[0.5,1]$ es de 2/3, mientras que 1/3 para el resto de intervalos.
 
