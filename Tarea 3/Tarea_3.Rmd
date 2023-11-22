@@ -67,7 +67,7 @@ En la siguiente sección deberá resolver cada uno de los experimentos computaci
 
 Para el desarrollo preste mucha atención en los enunciados, ya que se le solicitará la implementación de métodos sin uso de funciones predefinidas. Por otro lado, Las librerías permitidas para desarrollar de la tarea 3 son las siguientes:
 
-```{r, eval=FALSE}
+```{r}
 # Manipulación de estructuras
 library(tidyverse)
 library(dplyr)
@@ -165,30 +165,30 @@ Para el diseño de experimentos y/o comprobación de sus métodos puede serles �
 - Two-Sample: [Simple Power Calculation for Two-Sample Z Test](https://ytliu0.github.io/Stat_Med/power2.html)
 
 **Respuesta**
-```{r, eval=FALSE}
+```{r}
 # Power Function, El esqueleto posee como ejemplo como obtener la potencia de un z-test one-sample.
 # Si utiliza este esqueleto deberá comentar la función que cumple cada una de las partes entregadas
 power.z.test <- function(n1=NULL, sigma1=0.5, 
                          n2=NULL,sigma2=0.5, mu.Ha=0 , 
                          mu.True=0, alfa=0.05){
-  if(){
-    # 
+  if(is.null(n2)){
+    # One-sample Z-test
     Z = qnorm(1-alfa)
     
-    denominador = sigma1/sqrt(n1)
-    X_bar = Z*denominador + mu.Ha
+    denominador = sigma1/sqrt(n1) #error estandar
+    X_bar = Z*denominador + mu.Ha #valor critico
     
     numerador = X_bar - mu.True
-    Z = numerador/denominador
-    Power = 1 - pnorm(Z)
+    Z = numerador/denominador #Valor Z para la potencia
+    Power = 1 - pnorm(Z) #Potencia del test
     
-    # 
+    # Definimos limites para el grafico
     min_lim = min(rnorm(1000, mean=mu.Ha, sd=denominador)) - 
       round(min(rnorm(1000, mean=mu.Ha, sd=denominador)))%%10
     max_lim = max(rnorm(1000, mean=mu.True, sd=denominador)) +
       round(max(rnorm(1000, mean=mu.True, sd=denominador)))%%10
       
-    # 
+    # Crear el grafico
     plot <- ggplot(data.frame(x = c(min_lim, max_lim)), aes(x)) + 
       stat_function(fun = dnorm, args = list(mean = mu.Ha, sd = denominador), 
                     col='red') +
@@ -202,19 +202,39 @@ power.z.test <- function(n1=NULL, sigma1=0.5,
       ggtitle("H0 vs Ha") +
       xlab(expression(bar(X))) + ylab("Density")
     }
-  }
   
-  if(){
-    #
+  
+  if(!is.null(n2)){
+    #Two-sample Z-test
+    Z = qnorm(1-alfa/2)
+    denominador = sqrt((sigma1^2/sqrt(n1))+(sigma2^2/sqrt(n2)))
+    X_bar = Z * denominador + mu.Ha
     
-    # 
-    if(plot.hypothesis){
-      
-      # 
-      
-      # 
-      plot = ...
-    }
+    numerador = X_bar - mu.True
+    Z = numerador / denominador #Valor Z para la potencia
+    Power = 1 - pnorm(Z) #Potencia del test
+    
+    # Definir límites para el gráfico
+    min_lim = min(rnorm(1000, mean = mu.Ha, sd = denominador)) - 
+      round(min(rnorm(1000, mean = mu.Ha, sd = denominador))) %% 10
+    max_lim = max(rnorm(1000, mean = mu.True, sd = denominador)) +
+      round(max(rnorm(1000, mean = mu.True, sd = denominador))) %% 10
+    
+
+    # Crear el grafico  
+    plot <- ggplot(data.frame(x = c(min_lim, max_lim)), aes(x)) + 
+    stat_function(fun = dnorm, args = list(mean = 0, sd = denominador), 
+                  col = 'red') +
+    stat_function(fun = dnorm, args = list(mean = mu.True, sd = denominador), 
+                  col = 'blue') +
+    stat_function(fun = dnorm, args = list(mean = mu.True, sd = denominador), 
+                  xlim = c(mu.Ha, max_lim), geom = "area", fill = 'red') + 
+    geom_vline(xintercept = mu.Ha, linetype = "dotted", size = 1) +
+    annotate(x = mu.Ha, y = +Inf, label = "alpha/2", vjust = 2, geom = "label") +
+    annotate(x = -mu.Ha, y = +Inf, label = "alpha/2", vjust = 2, geom = "label") +
+    theme_minimal() +
+    ggtitle("H0 vs Ha") +
+    xlab(expression(bar(X))) + ylab("Density")
   }
   
   # Como R no permite retornar dos salidas usamos una lista
@@ -223,10 +243,80 @@ power.z.test <- function(n1=NULL, sigma1=0.5,
 }
 
 
-# Plot de gráfico de potencia
-
-# Experimentos
 ```
+
+```{r}
+
+# Experimento para variar mu.True y alfa
+n1 <- 16
+sigma1 <- 16
+mu.Ha <- 100
+variar <- 100
+num_points <- 100
+
+# Inicializar listas para almacenar resultados
+power_values <- matrix(nrow = num_points, ncol = 3)  # Una columna para cada alfa
+mu_true_values <- numeric(num_points)
+
+# Iterar sobre diferentes valores de mu.True
+for (i in 1:num_points) {
+  mu.True <- mu.Ha + sigma1 * i / variar
+  
+  # Iterar sobre diferentes valores de alfa
+  for (alpha in c(0.05, 0.01, 0.1)) {
+    # Llamar a la función power.z.test y almacenar resultados
+    result <- power.z.test(n1 = n1, sigma1 = sigma1, mu.Ha = mu.Ha, mu.True = mu.True, alfa = alpha)
+    power_values[i, which(alpha == c(0.05, 0.01, 0.1))] <- result$power
+  }
+  
+  mu_true_values[i] <- mu.True
+}
+
+# Crear un dataframe con los resultados
+results_df <- data.frame(mu.True = mu_true_values, Power_0.05 = power_values[, 1], Power_0.01 = power_values[, 2], Power_0.1 = power_values[, 3])
+
+# Graficar el resultado
+
+ggplot(results_df, aes(x = mu.True)) +
+  geom_line(aes(y = Power_0.05, col = "0.05"), linetype = "solid") +
+  geom_line(aes(y = Power_0.01, col = "0.01"), linetype = "dashed") +
+  geom_line(aes(y = Power_0.1, col = "0.1"), linetype = "dotted") +
+  labs(title = "Gráfico de Potencia",
+       x = expression(mu.True),
+       y = "Potencia") +
+  theme_minimal() +
+  scale_color_manual(values = c("0.05" = "red", "0.01" = "blue", "0.1" = "green"),
+                     name = "Valor de alpha",
+                     labels = c("0.01", "0.05", "0.1"))
+
+
+```
+
+
+```{r}
+
+# Experimento one-sided
+result_exp1 <- power.z.test(n1 = 16, sigma1 = 16, mu.Ha = 100, mu.True = 108 , alfa = 0.05)
+print(result_exp1$power)
+print(result_exp1$plot)
+
+result_exp1 <- power.z.test(n1 = 16, sigma1 = 16, mu.Ha = 100, mu.True = 112 , alfa = 0.05)
+print(result_exp1$power)
+print(result_exp1$plot)
+
+result_exp1 <- power.z.test(n1 = 16, sigma1 = 16, mu.Ha = 100, mu.True = 116 , alfa = 0.05)
+print(result_exp1$power)
+print(result_exp1$plot)
+
+
+
+```
+```{r}
+result_two_sample <- power.z.test(n1 = 64, sigma1 = 20, n2 = 64, sigma2 = 25, mu.Ha = 10, mu.True = 10, alfa = 0.05)
+print(result_two_sample$power)
+print(result_two_sample$plot)
+```
+
 
 ---
 
@@ -520,21 +610,91 @@ head(data)
 probEmpirica <- function(alpha,m){
   n <- 10000 # Cantidad de veces que se va a repetir el experimento para estimar la probabilidad, pueden cambiar este valor si lo desean
   
-
-  res <-... #Resultados de los experimentos
+  # Resultados de los experimentos
+  res <- matrix(rbinom(n * m, size = 1, prob = alpha), nrow = n, ncol = m)
   
-  # Puede agergar todo el codigo que estime conveniente para calcular la probabilidad empirica
-  ...
-  ...
-  #
-  prob <-... # Probabilidad empirica
+  resultados_significativos <- apply(res, 1, function(x) any(x == 1))
+  
+  # Probabilidad empírica
+  prob <- sum(resultados_significativos) / n
   
   return(prob)
   
 }
 
+alpha <- 0.05
+m_values <- 1:50
+
+# Calcular y almacenar las probabilidades empíricas para diferentes valores de m
+probabilidades_empiricas <- sapply(m_values, function(m) probEmpirica(alpha, m))
+probabilidades_bonferroni <- sapply(m_values, function(m) probEmpirica(alpha/m, m))
+
+
+#Data frame con los resultados
+data <- data.frame(m_values, Probabilidad_real = 1 - (1 - alpha)^m_values, Empirica = probabilidades_empiricas, 
+                   Probabilidad_real_bonferroni = 1 - (1 - alpha/m_values)^m_values, Empirica_bonferroni = probabilidades_bonferroni )
+
+# Gráficos 
+ggplot(data, aes(x = m_values)) +
+  geom_line(aes(y = Probabilidad_real, color = "Teórica"), linetype = "solid") +
+  geom_line(aes(y = Empirica, color = "Empírica"), linetype = "solid") +
+  labs(x = "Número de experimentos (m)", y = "Probabilidad") +
+  theme_minimal() +
+  scale_color_manual(values = c("Teórica" = "blue", "Empírica" = "red"),
+                     name = "Metodos")
+
+
+ggplot(data, aes(x = m_values)) +
+  geom_line(aes(y = Probabilidad_real_bonferroni, color = "Teórica Bonferroni"), linetype = "solid") +
+  geom_line(aes(y = Empirica_bonferroni, color = "Empírica Bonferroni"), linetype = "solid") +
+  labs(x = "Número de experimentos (m)", y = "Probabilidad") +
+  theme_minimal() +
+  scale_color_manual(values = c("Teórica Bonferroni" = "blue", "Empírica Bonferroni" = "red"),
+                     name = "Metodos")
+
 ```
 
+Los resultados empíricos y teóricos se ven similares, esto es correcto, ya que la probabilidad empirica se basa en la fórmula que utilizamos para simular los experimentos.
+
+
+```{r}
+alpha <- 0.1
+m_values <- 1:50
+
+# Calcular y almacenar las probabilidades empíricas para diferentes valores de m
+probabilidades_empiricas <- sapply(m_values, function(m) probEmpirica(alpha, m))
+probabilidades_bonferroni <- sapply(m_values, function(m) probEmpirica(alpha/m, m))
+
+
+#Data frame con los resultados
+data <- data.frame(m_values, Probabilidad_real = 1 - (1 - alpha)^m_values, Empirica = probabilidades_empiricas, 
+                   Probabilidad_real_bonferroni = 1 - (1 - alpha/m_values)^m_values, Empirica_bonferroni = probabilidades_bonferroni )
+
+# Gráficos
+ggplot(data, aes(x = m_values)) +
+  geom_line(aes(y = Probabilidad_real, color = "Teórica"), linetype = "solid") +
+  geom_line(aes(y = Empirica, color = "Empírica"), linetype = "solid") +
+  labs(x = "Número de experimentos (m)", y = "Probabilidad") +
+  theme_minimal() +
+  scale_color_manual(values = c("Teórica" = "blue", "Empírica" = "red"),
+                     name = "Metodos")
+
+ggplot(data, aes(x = m_values)) +
+  geom_line(aes(y = Probabilidad_real_bonferroni, color = "Teórica Bonferroni"), linetype = "solid") +
+  geom_line(aes(y = Empirica_bonferroni, color = "Empírica Bonferroni"), linetype = "solid") +
+  labs(x = "Número de experimentos (m)", y = "Probabilidad") +
+  theme_minimal() +
+  scale_color_manual(values = c("Teórica Bonferroni" = "blue", "Empírica Bonferroni" = "red"),
+                     name = "Metodos")
+
+```
+Respondiendo las preguntas:
+
+Cuando la cantidad de experimentos crece mucho, la probabilidad de obtener al menos un resultado significativo por azar también aumenta. Esto es consistente con la fórmula teórica mencionada, el comportamiento tambien depende del valor de significancia. Si la significancia es pequeña, la probabilidad de obtener al menos un resultado significativo será menor. Por esto este metodo no es útil para realizar multiples test de hipotesis, ya que los resultados son muy similares, en especial para un valor de significancia pequeño como lo es 0,05.
+
+El método de Bonferroni nos hace una corrección para controlar el error de tipo I, y por esto nos ayuda a controlar el riesgo de obtener falsos positivos. Sin embargo, en esta corrección si m es grande puede aumentar el riesgo de falsos negativos, dejandonos asi que si crece demasiado el m es un riesgo esta corrección.
+
+Finalmente, si el alpha es 0,05, se hubieran rechazado la gran mayoria de los valores que en un comienzo serian aceptados, aumentando asi mismo la cantidad de falsos negativos.
 ---
 
 ### Pregunta 4: Regression Lineal sin comandos.
