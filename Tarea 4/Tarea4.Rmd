@@ -1,0 +1,498 @@
+---
+title: "Tarea 4"
+output:
+  html_document:
+    df_print: paged
+---
+
+![](banner.png)
+
+<center> <h1>Tarea 4: Bayesian Inference Part I</h1> </center>
+<center><strong>CC6104: Statistical Thinking</strong></center>
+#### **Integrantes :** 
+
+- Nicolás Acevedo
+- Diego Navarrete
+
+#### **Cuerpo Docente:**
+
+-   Profesor: Felipe Bravo M.
+-   Auxiliar: Martín Paredes, María José Zambrano
+-   Ayudantes:Nicolás Cabello, Kevin Iturra, Mariana Vásquez
+            
+
+#### **Fecha límite de entrega: 22/11/2023**
+
+### **Índice:**
+
+1. [Objetivo](#id1)
+2. [Instrucciones](#id2)
+3. [Referencias](#id3)
+4. [Elaboración de Código](#id5)
+
+### **Objetivo**<a name="id1"></a>
+
+Bienvenid@s a la cuarta tarea del curso Statistical Thinking. Esta tarea tiene como objetivo evaluar los contenidos teóricos de la primera parte del curso, los cuales se enfocan principalmente en introducirlos en la estadística bayesiana. Si aún no han visto las clases, se recomienda visitar los enlaces de las referencias.
+
+La tarea consta de una parte práctica con el fin de introducirlos a la programación en R enfocada en el análisis estadístico de datos. 
+
+### **Instrucciones:**<a name="id2"></a>
+
+- La tarea se realiza en grupos de **máximo 2 personas**. Pero no existe problema si usted desea hacerla de forma individual.
+- La entrega es a través de u-cursos a más tardar el día estipulado en la misma plataforma. A las tareas atrasadas se les descontará un punto por día.
+- El formato de entrega es este mismo **Rmarkdown** y un **html** con la tarea desarrollada. Por favor compruebe que todas las celdas han sido ejecutadas en el archivo html.
+- Al momento de la revisión tu código será ejecutado. Por favor verifica que tu entrega no tenga errores de compilación.
+- No serán revisadas tareas desarrolladas en Python.
+- Está **PROHIBIDO** la copia o compartir las respuestas entre integrantes de diferentes grupos.
+- Pueden realizar consultas de la tarea a través de U-cursos y/o del canal de Discord del curso. 
+
+
+### **Referencias:**<a name="id3"></a>
+
+Slides de las clases:
+
+- [Introduction to Bayesian Inference](https://github.com/dccuchile/CC6104/blob/master/slides/3_1_ST-bayesian.pdf)
+- [Summarizing the Posterior](https://github.com/dccuchile/CC6104/blob/master/slides/3_2_ST-posterior.pdf)
+
+
+Videos de las clases:
+
+- Introduction to Bayesian Inference: [video1](https://youtu.be/Gf2uuElPH0g) [video2](https://youtu.be/5ZZ3PTPdZQw) [video3](https://youtu.be/d_jXwM_-5jc) [video4](https://youtu.be/yZW1V3X4J94) [video5](https://youtu.be/-fw0ktR7psM) [video6](https://youtu.be/0oK9M82sw8Q) [video7](https://youtu.be/u7Qdw5rDDDU)
+- Summarizing the Posterior: [video1](https://youtu.be/67o8wcZsgtk)  [video2](https://youtu.be/Xr8S1Uv_5GQ) [video3](https://youtu.be/XJKyW4tYp_0) [video4](https://youtu.be/OMipgV727wo)
+
+Documentación:
+
+- [rethinking](https://github.com/rmcelreath/rethinking)
+- [tidyr](https://tidyr.tidyverse.org)
+- [purrr](https://purrr.tidyverse.org)
+- [dplyr](https://dplyr.tidyverse.org)
+- [ggplot2](https://ggplot2.tidyverse.org/)
+
+
+# Elaboración de Código<a name="id5"></a>
+
+En la siguiente sección deberá resolver cada uno de los experimentos computacionales a través de la programación en R. Para esto se le aconseja que cree funciones en R, ya que le facilitará la ejecución de gran parte de lo solicitado.
+
+Para el desarrollo preste mucha atención en los enunciados, ya que se le solicitará la implementación de métodos sin uso de funciones predefinidas. Por otro lado, Las librerías permitidas para desarrollar de la tarea 4 son las siguientes:
+
+```{r}
+# Manipulación de estructuras
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(purrr)
+
+# Para realizar plots
+library(scatterplot3d)
+library(ggplot2)
+library(plotly)
+
+# Manipulación de varios plots en una imagen.
+library(gridExtra)
+
+# Análisis bayesiano
+library(rethinking)
+```
+
+Si no tiene instalada la librería “rethinking”, ejecute las siguientes líneas de código para instalar la librería:
+
+```{r, eval=FALSE}
+install.packages("rethinking")
+```
+
+En caso de tener problemas al momento de instalar la librería con el código anterior, utilice las siguiente chunk:
+
+```{r, eval=FALSE}
+install.packages(c("mvtnorm","loo","coda"), repos="https://cloud.r-project.org/",dependencies=TRUE)
+options(repos=c(getOption('repos'), rethinking='http://xcelab.net/R'))
+install.packages('rethinking',type='source')
+```
+O también con el siguiente script: <https://github.com/dccuchile/CC6104/blob/master/scripts/rethinking_install.R>
+
+### Preguntas: Introducción a Grid Approximation
+Las primeras dos preguntas de esta tarea tienen como objetivo introducirlos en la inferencia Bayesiana utilizando la técnica Grid Approximation para obtener una aproximación de la posterior. Al finalizar los problemas ustedes deberán ser capaces de visualizar los efectos que tiene el prior en la posterior, saber cómo realizar una Grid Approximation y comprender como utilizar Percentile Interval (PI) en una posterior.
+
+### Pregunta 1:
+
+Considere el dataset "moneda.csv" donde se encuentran los resultados de un experimento lanzando una moneda, el objetivo de esta pregunta es estudiar mediante técnicas de inferencia Bayesiana el valor de la probabilidad de que salga cara  (parámetro $\theta$). En los datos una cara está representada por el valor $1$. Puede usar la librería rethinking durante toda esta pregunta (si lo desea).
+
+```{r}
+dataMoneda <- read.csv("moneda.csv", header = TRUE)
+```
+
+
+- [ ] Programe el metodo grid approximation para distintos tamaños de experimento. ¿Como van cambiando las curvas posterior? Para esto considere un prior uniforme y como función de likelihood una binomial.
+
+- [ ] Repita el mismo análisis anterior pero utilizando el método de Laplace (no necesita programar el método, puede utilizar la libreria "rethinking"). ¿Como se comparan con los resultados anteriores?.
+
+De aquí en adelante deberán trabajar con muestras del posterior.
+
+- [ ] Grafique la densidad de la posterior y encuentre la proporción de los siguientes defined boundaries:
+
+  - [ ] $(0, 0.4)$
+  - [ ] $(0.4,0.7)$
+  - [ ] $(0.7,1)$
+
+¿Como puede interpretar los resultados? 
+
+- [ ] Calcule un intervalo de credibilidad al $50\%$, $75\%$ y $95\%$. ¿Como se puede interpretar los resultados? ¿Cual podría ser un problema al usar intervalos de credibilidad?.
+- [ ] Genere los intervalos HDPI para $50\%$, $75\%$ y $95\%$, compárelos con  los intervalos de credibilidad de la parte anterior. ¿En que se diferencian los intervalos de credibilidad con los HDPI?.
+
+> Respuesta Aqui
+
+Primero, vamos a definir las funciones `grid_approx` y `laplace_aprox`, las cuales nos van a permitir calcular los valores pedidos de mejor manera.
+```{r}
+grid_approx <- function(data, size_exp) {
+  n_heads <- sum(data$Resultado[1:size_exp])
+  p_grid <- seq(from = 0, to = 1, length.out = size_exp)
+  prior <- rep(1, size_exp)
+  likelihood <- dbinom(x = n_heads, size = size_exp, prob = p_grid)
+  posterior <- likelihood * prior
+  posterior_std <- posterior / sum(posterior)
+  return(list(p_grid = p_grid, posterior = posterior_std))
+}
+
+laplace_approx <- function(data, size_exp) {
+  n_heads <- sum(data$Resultado[1:size_exp])
+  qa <- quap(
+    alist(
+      heads ~ dbinom(heads + tails, p),
+      p ~ dunif(0, 1)
+    ),
+    data = list(heads = n_heads, tails = size_exp - n_heads),
+    control = list(ndeps = 1e-6)
+  )
+  return(qa)
+}
+```
+
+Veamos como va cambiando el valor óptimo de $p$ en función de la cantidad de datos
+
+```{r}
+x <- seq(from = 1, to = 1000)
+y <- vector(length = 1000)
+for (i in x) {
+  experiment <- grid_approx(dataMoneda, i)
+  p_grid <- experiment$p_grid
+  posterior <- experiment$posterior
+  y[i] <- p_grid[which.max(posterior)]
+}
+
+plot(
+  x = x,
+  y = y,
+  xlab = "Cantidad de datos",
+  ylab = "Valor de p"
+)
+title("Valores de p para distinta cantidad de datos con Grid Approximation")
+```
+
+Es notorio que a partir de 400 datos ya es posible ver que el valor de $p$ está alrededor de $0.50$, pero que a medida que la cantidad de datos aumenta, esto se va moviendo hasta llegar aproximadamente al $0.55$.
+
+Ahora, repetimos lo anterior pero aplicando el método de Laplace para obtener los valores
+
+```{r}
+
+x <- seq(from = 4, to = 1000)
+y <- vector(length = 997)
+for (i in x) {
+  experiment <- laplace_approx(dataMoneda, i)
+  y[i - 3] <- precis(experiment)$mean
+}
+
+plot(
+  x = x,
+  y = y,
+  xlab = "Cantidad de datos",
+  ylab = "Valor de p"
+)
+title("Valores de p para distinta cantidad de datos con Laplace Approximation")
+```
+
+Al comparar los gráficos se puede apreciar que son bastante similares, y que convergen al mismo valor de $0.55$. Esto indica que el valor de $p$ que mejor se adapta a los datos es efectivamente $p = 0.55$.
+
+Ahora, trabajemos con la densidad del posterior, que es la siguiente
+
+```{r}
+experiment <- grid_approx(dataMoneda, nrow(dataMoneda))
+p_grid <- experiment$p_grid
+posterior <- experiment$posterior
+plot(
+  x = p_grid,
+  y = posterior,
+  xlab = "Valores de p",
+  ylab = "Valor de posterior",
+  type = "l"
+)
+title("Densidad de posterior")
+```
+
+Ahora calculemos la proporción de los defined boundaries
+
+```{r}
+p <- sum(posterior[p_grid < 0.4])
+cat("Boundaries: (0, 0.4), p = ", p, "\n", sep = "")
+p <- sum(posterior[p_grid < 0.7]) -  sum(posterior[p_grid < 0.4])
+cat("Boundaries: (0.4, 0.7), p = ", p, "\n", sep = "")
+p <- 1 - sum(posterior[p_grid < 0.7])
+cat("Boundaries: (0.7, 1), p = ", p, "\n", sep = "")
+```
+
+Esto nos dice que el parámetro de probabilidad se encuentra con mucha más seguridad entre 0.4 y 0.7 que fuera del intervalo, lo cual se corresponde con lo calculado anteriormente.
+
+Ahora calculemos los intervalos de credibilidad.
+
+Primero, el intervalo de credibilidad al $50\%$
+
+```{r}
+samples <- sample(p_grid, size = 1e4, replace = TRUE, prob = posterior)
+print(PI(samples, prob = 0.50))
+```
+
+Luego, el intervalo de credibilidad al $75\%$
+
+```{r}
+print(PI(samples, prob = 0.75))
+```
+
+Finalmente, el intervalo de credibilidad al $95\%$
+
+```{r}
+print(PI(samples, prob = 0.95))
+```
+
+Al calcular estos tres intervalos, se puede apreciar que la probabilidad se mantiene agrupada alrededor del $0.55$, que es consecuente con lo calculado anteriormente. El problema de esto es que, si la forma de la distribución no fuera centrada sino hacia los extremos (como sería el caso de una función creciente), entonces estos intervalos no nos dan información concreta sobre la forma de la distribución ya que solo mide la probabilidad al interior del intervalo, mientras que la distribución puede estar cargada hacia algún extremo.
+
+Ahora, calculemos los intervalos HPDI.
+
+Primero, el intervalo HPDI al $50\%$
+
+```{r}
+print(HPDI(samples, prob = 0.50))
+```
+
+Luego, el intervalo HPDI al $75\%$
+
+```{r}
+print(HPDI(samples, prob = 0.75))
+```
+
+Finalmente, el intervalo HPDI al $95\%$
+
+```{r}
+print(HPDI(samples, prob = 0.95))
+```
+
+Se puede ver que los intervalos HPDI son bastante similares a los intervalos de credibilidad. Esto se debe a que, como se muestra más arriba, la asimetría de la densidad del posterior es bastante baja, ya que esta está centrada muy cerca de la mitad en el $0.55$. A pesar de esto, se debe notar que estos intervalos no son iguales. Los intervalos de credibilidad separan la distribución en colas de igual probabilidad, mientras que los intervalos HPDI no tienen esa restricción, permitiendole cargarse hacia los lados y ser más preciso en caso de tener una distribución muy asimétrica.
+
+---
+
+### Pregunta 2: Grid Approximation y Posterior Predictive Distribution
+
+El objetivo de esta pregunta es comprender el concepto de `Posterior Predictive Distribution` visto en clases y realizar predicciones en base a una posterior. 
+
+Un conjunto de carteros aburridos de las mordidas de perros ha decidido realizar un catastro de mordidas recibidas por los empleados de su empresa en un periodo de dos meses, planeando en base a estos datos realizar inferencia bayesiana. Los datos de las mordidas están datos por el dataset `no+mordidas.csv`, en donde cada fila representa las mordidas recibidas por diferentes carteros y las columnas señalan si fue mordido o no el cartero en los meses de estudio (notar que si fue mordido sera señalado con un 1, de lo contrario es señalado con un 0). Cabe señalar que un cartero no puede ser mordido mas de una vez al mes, ya que el damnificado recibe licencia por todos los días restantes del mes tras la mordida, reincorporándose el siguiente mes al trabajo.
+
+```{r}
+df <- read.csv("no+mordidas.csv")
+head(df)
+```
+
+En base a los datos, realice los siguientes puntos:
+
+- [ ] Realice una *grid approximation* para estimar la probabilidad que un cartero sea mordido (parámetro $\theta$), para esto junte los datos del mes 1 y 2 de estudio. Señale el máximo valor de la posterior.Considere un prior uniforme y como función de likelihood una binomial.
+
+- [ ] Utilizando la posterior obtenida en el paso anterior, utilice rbinom para simular 10.000 réplicas de 500 registros de mordidas. Con esto, deberá obtener 10.000 números, cada uno de los cuales es un recuento de las mordidas obtenidas en el registro de datos. Compare la distribución del número de los carteros mordidos predichos con el número real de los datos (248 carteros mordidos de un total de 500 datos). ¿El modelo se ajusta bien a los datos? Es decir, ¿la distribución de las predicciones incluye la observación real como resultado central y probable?
+
+- [ ] Como se comento en el comienzo `bites_month1` contiene las mordidas señaladas por un conjunto de personas en el primer mes. Haciendo uso de `bites_month2`, obtenga la posterior de que una persona que fue mordida en el primer mes, sea mordida nuevamente en el segundo mes. Para esto, se recomienda comenzar buscando los carteros que fueron mordidos el primer mes y en base a estos generar una búsqueda indexada para obtener el número solicitado. Hecho esto, simule ese número carteros mordidos 10.000 veces. De los resultados obtenidos, compare el recuento de carteros mordidos con el recuento real. ¿Cómo se ve el modelo desde este punto de vista?
+
+> Respuesta Aqui
+
+Calculemos la probabilidad que un cartero sea mordido
+```{r}
+bites_1 <- df$bites_month_1
+bites_2 <- df$bites_month_2
+data <- c(bites_1, bites_2)
+
+n_data <- length(data)
+n_bites <- sum(data)
+p_grid <- seq(from = 0, to = 1, length.out = n_data)
+prior <- rep(1, n_data)
+likelihood <- dbinom(x = n_bites, size = n_data, prob = p_grid)
+posterior <- likelihood * prior
+posterior_std <- posterior / sum(posterior)
+p <- p_grid[which.max(posterior_std)]
+
+cat("max posterior:", max(posterior_std),
+  "\np:", p, "\n"
+)
+```
+
+Usando el valor de $p$ encontrado, veamos si el modelo se ajusta a los datos
+
+```{r}
+simulation <- rbinom(n = 1e4, size = 500, prob = p)
+hist(simulation, breaks = seq(from = min(simulation), to = max(simulation)))
+abline(v = 248, col = "red")
+```
+
+Podemos notar en el histograma que efectivamente la observación real está al centro y como uno de los valores más probables, que puede ir variando según la aleatoriedad del proceso de generación de las 10.000 muestras. Por lo tanto, podemos decir que el modelo se ajusta bien a los datos.
+
+Veamos la probabilidad de que un cartero que fue mordido el primer mes sea mordido de nuevo el segundo mes. 
+```{r}
+bit_again <- bites_2[bites_1]
+n_bites <- sum(bit_again)
+posterior <- dbeta(p_grid, n_bites + 1, length(bites_2) - n_bites + 1)
+p <- p_grid[which.max(posterior)]
+cat(
+  "max posterior:", max(posterior),
+  "\np:", p, "\n"
+)
+```
+
+Con este valor de $p$ encontrado, veamos si el modelo se adapta bien a los datos. Esta vez el tamaño del experimento es 250 porque es la cantidad de carteros del segundo mes.
+
+```{r}
+simulation <- rbinom(n = 1e4, size = 250, prob = p)
+hist(simulation, breaks = seq(from = min(simulation), to = max(simulation)))
+abline(v = n_bites, col = "red")
+```
+
+Al igual que en el caso anterior, el valor real está centrado y tiene la frecuencia más alta, por lo que el modelo se ajusta correctamente a los datos.
+
+---
+
+### Pregunta 3:
+
+En esta pregunta se trabajará con el dataset "notas.csv" el cual contiene las notas históricas de un curso desconocido. Para esta pregunta asumiremos que una nota $X \sim\mathcal{N}(\mu,\sigma^2)$ y nuestro parámetros objetivos serán: $\mu,\sigma$. El objetivo es contrar la distribución posterior de $\mu$ y $\sigma$ mediante técnicas de inferencia Bayesiana.
+
+Usted sabe un dato extra sobre la información, los valores de $\sigma$ en la grilla se mueven en el intervalo $[0.5,1.5]$ y, además, tiene una fuerte creencia a que es mas probable encontrar la desviación estándar real entre $[0.5,1]$ que en $(1,1.5]$. De hecho, estudios señalan que la probabilidad de encontrar sigma en los valores $[0.5,1]$ es de 2/3, mientras que 1/3 para el resto de intervalos.
+
+
+- [ ] Modifique el siguiente código que permite realizar una grid approximation para $2$ parámetros. Proponga priors para $\mu$ y $\sigma$, justifique su elección.
+
+
+```r
+# Leer información
+data_notas <- read.csv("notas.csv")
+
+# Función para crear likelihood dado mu y sigma
+grid_function <- function(mu,sigma){
+   .... # Funcion de likelihood
+}
+
+# Valores de la grilla
+grid_mu <- ...
+grid_sigma <- ...
+
+# Se crea la grilla 2d
+data_grid <- expand_grid(grid_mu,grid_sigma)
+
+# Se guarda la likelihod
+data_grid$likelihood <- map2(data_grid$grid_mu,data_grid$grid_sigma, grid_function)
+
+# Se transforma el forma de map2 a una columna
+data_grid <- unnest(data_grid,cols = c("likelihood"))
+
+
+# Valores de los priors
+prior_mu <- ...
+prior_sigma <-  ...
+
+# Se crea la grilla 2d de priors
+prior <- expand_grid(prior_mu,prior_sigma)
+
+# Se calculan los valores del prior
+data_grid$prior <-  map2(prior$prior_mu,prior$prior_sigma, prod)
+data_grid <- unnest(data_grid,cols = c("prior"))
+
+# Se calcula el posterior
+data_grid$unstd_posterior <-  data_grid$likelihood * data_grid$prior
+
+# Se estandariza el posterior
+data_grid$posterior <- data_grid$unstd_posterior/sum(data_grid$unstd_posterior)
+
+# Se ajustan los valores de la posterior para que no sean valores tan pequñeos
+data_grid$posterior <- (data_grid$posterior - min(data_grid$posterior))/(max(data_grid$posterior)-min(data_grid$posterior))
+
+```
+
+- [ ] Tras haber ejecutado el código de la parte anterior ejecute el siguiente, ¿Que puede decir de los valores de la distribución? Se recomienda hacer modificaciones en el código para realizar un mejor análisis y estudio.
+
+
+```r
+# Punto de referencia
+# Se recomienda cambiar estos valores por unos adecuados que le permitan estudiar
+# Los valores de la distribución de mejor manera
+valor_x <- 1
+valor_y <- 1
+
+# Grafico
+
+punto_comparacion <- tibble(x = valor_x, y = valor_y)
+
+plt <- data_grid %>%
+  ggplot(aes(x = grid_mu, y = grid_sigma)) +
+  geom_raster(aes(fill = posterior),
+    interpolate = T
+  )+ 
+  geom_point(x = valor_x, y = valor_y, size = 1.3,color="white")+
+  geom_label(
+    data = punto_comparacion, aes(x, y),
+    label = "Punto Comparación",
+    fill = "green",
+    color = "black",
+    nudge_y = 0, # Este parametro desplaza la caja por el eje y
+    nudge_x = 1 # Este parametro desplaza la caja por el eje x
+  )+
+  scale_fill_viridis_c() +
+  labs(
+    title = "Posterior para Mean y Standard Deviation",
+    x = expression(mu ["Mean"]),
+    y = expression(sigma ["Standar Deviation"])
+  ) +
+  theme(panel.grid = element_blank())
+
+plt
+```
+
+- [ ] A continuación se presenta un código que permite realizara la distribución dada por sampling from grid approximation ¿Para que sirve este proceso? ¿Que puede deducir del gráfico?
+
+
+```r
+# Codificamos los datos
+x <- 1:length(data_grid$posterior)
+
+# Sampleamos los indices
+posterior_samples_aux <- sample(x,size = 1e4, replace = T, prob = data_grid$posterior)
+
+# Obtenemos los verdaderos valores de la sampling distribution
+posterior_samples <- data_grid[posterior_samples_aux,]
+
+# Obtenemos solos los valores relevantes para la densidad
+df <- data.frame(posterior_samples$grid_mu,posterior_samples$grid_sigma)
+
+# Realizamos las densidades
+dens(df)
+```
+
+> Respuesta Aqui
+
+
+&nbsp;
+<hr />
+<p style="text-align: center;">A work by <a href="https://github.com/dccuchile/CC6104">CC6104</a></p>
+
+<!-- Add icon library -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
+
+<!-- Add font awesome icons -->
+<p style="text-align: center;">
+    <a href="https://github.com/dccuchile/CC6104"><i class="fab fa-github" style='font-size:30px'></i></a>
+</p>
+
+<p style="text-align: center;">
+    <a href="https://discord.gg/XCbQvGs3Uf"><i class="fab fa-discord" style='font-size:30px'></i></a>
+</p>
+
+&nbsp;
