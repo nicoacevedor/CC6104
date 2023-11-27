@@ -1,0 +1,217 @@
+---
+title: "Tarea 5"
+output:
+  html_document:
+    df_print: paged
+---
+
+![](banner.png)
+
+<center> <h1>Tarea 5: Bayesian Inference Part II</h1> </center>
+<center><strong>CC6104: Statistical Thinking</strong></center>
+#### **Integrantes :** 
+
+- Alumno 1
+- Alumno 2
+
+#### **Cuerpo Docente:**
+
+-   Profesor: Felipe Bravo M.
+-   Auxiliar: Martín Paredes, María José Zambrano
+-   Ayudantes:Nicolás Cabello, Kevin Iturra, Mariana Vásquez
+            
+
+#### **Fecha límite de entrega: 13/12/2023**
+
+### **Índice:**
+
+1. [Objetivo](#id1)
+2. [Instrucciones](#id2)
+3. [Referencias](#id3)
+2. [Primera Parte: Preguntas Teóricas](#id4)
+3. [Segunda Parte: Elaboración de Código](#id5)
+
+### **Objetivo**<a name="id1"></a>
+
+Bienvenid@s a la uuuuultima tarea del curso Statistical Thinking. Esta tarea tiene como objetivo evaluar los contenidos teóricos de la ultima parte del curso, los cuales se enfocan principalmente en aplicar inferencia bayesiana para generar regresiones lineales y estudiar métodos de obtención de la posterior mas poderosos, como es MCMC. Si aún no han visto las clases, se recomienda visitar los enlaces de las referencias.
+
+La tarea consta de una parte práctica con el fin de introducirlos a la programación en R enfocada en el análisis estadístico de datos. 
+
+### **Instrucciones:**<a name="id2"></a>
+
+- La tarea se realiza en grupos de **máximo 2 personas**. Pero no existe problema si usted desea hacerla de forma individual.
+- La entrega es a través de u-cursos a más tardar el día estipulado en la misma plataforma. A las tareas atrasadas se les descontará un punto por día.
+- El formato de entrega es este mismo **Rmarkdown** y un **html** con la tarea desarrollada. Por favor compruebe que todas las celdas han sido ejecutadas en el archivo html.
+- Al momento de la revisión tu código será ejecutado. Por favor verifica que tu entrega no tenga errores de compilación.
+- No serán revisadas tareas desarrolladas en Python.
+- Está **PROHIBIDO** la copia o compartir las respuestas entre integrantes de diferentes grupos.
+- Pueden realizar consultas de la tarea a través de U-cursos y/o del canal de Discord del curso. 
+
+
+### **Referencias:**<a name="id3"></a>
+
+Slides de las clases:
+
+- [Bayesian Linear Regression](https://github.com/dccuchile/CC6104/blob/master/slides/3_3_ST-bayes_lin.pdf)
+- [Markov Chain Monte Carlo](https://github.com/dccuchile/CC6104/blob/master/slides/3_4_ST-MCMC.pdf)
+- [Model Evaluation and Information Criteria](https://github.com/dccuchile/CC6104/blob/master/slides/4_1_ST-eval.pdf)
+- [Directed Graphical Models](https://github.com/dccuchile/CC6104/blob/master/slides/4_2_ST-dag.pdf)
+
+
+Videos de las clases:
+
+- Bayesian Linear Regression: [video 1](https://youtu.be/DrwhRshBVjM), [video 2](https://youtu.be/lgNMDCzTV9k),  [video 3](https://youtu.be/ajMucPrZDpU), [video 4](https://youtu.be/YSGWWSUMPOk), [video 5](https://youtu.be/Ma9V8Nown9Q)
+- Markov Chain Monte Carlo: [video 1](https://youtu.be/gsofPiPBIeU), [video 2](https://youtu.be/EJZWaph61p4),  [video 3](https://youtu.be/jfidS22imJM), [video 4](https://youtu.be/kif9EG-sy2I), [video 5](https://youtu.be/iVgiowZvyZM), [video 6](https://youtu.be/r0BNqctisLg)
+- Model Evaluation and Information Criteria: [video 1](https://youtu.be/HCCzwltLVCc), [video 2](https://youtu.be/twpZHZMmKgM),  [video 3](https://youtu.be/ny4SlO3rcTo), [video 4](https://youtu.be/6U7laePWt9M), [video 5](https://youtu.be/vE2VaK9tLV8), [video 6](https://youtu.be/wmBugs36H-4)  
+- Directed Graphical Models: [video 1](https://youtu.be/2jnj-7xpK0E), [video 2](https://youtu.be/GZf8uB37noU),  [video 3](https://youtu.be/3EDdNLOrj_4), [video 4](https://youtu.be/cODS9GgepA4), [video 5](https://youtu.be/JA8H-LjAatE), [video 6](https://youtu.be/YXf0wnzvCFM)   
+
+Documentación:
+
+- [rethinking](https://github.com/rmcelreath/rethinking)
+- [tidyr](https://tidyr.tidyverse.org)
+- [purrr](https://purrr.tidyverse.org)
+- [dplyr](https://dplyr.tidyverse.org)
+- [ggplot2](https://ggplot2.tidyverse.org/)
+
+### Pregunta 1: Model Evaluation and Information Criteria
+
+Explique cómo cross-validation, criterios de información y regularización ayudan a mitigar o medir los problemas de underfitting y overfitting.
+
+> *Respuesta*
+
+
+### Pregunta 2: Directed Graphical Models	
+
+Diseñe una DAG para un problema causal inventado por usted de al menos 5 nodos (puede basarse en el ejemplo de Eugene Charniak) usando Dagitty y considere que la DAG tenga al menos: una chain, un fork y un collider. Muestre con dagitty todas las independencias condicionales de su DAG. Explique las independencias usando las reglas de d-separación.
+
+> *Respuesta*
+
+
+En la siguiente sección deberá resolver cada uno de los experimentos computacionales a través de la programación en R. Para esto se le aconseja que cree funciones en R, ya que le facilitará la ejecución de gran parte de lo solicitado.
+
+Para el desarrollo preste mucha atención en los enunciados, ya que se le solicitará la implementación de métodos sin uso de funciones predefinidas. Por otro lado, Las librerías permitidas para desarrollar de la tarea 4 son las siguientes:
+
+```{r, eval=FALSE}
+# Manipulación de estructuras
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+
+# Para realizar plots
+library(scatterplot3d)
+library(ggplot2)
+library(plotly)
+
+# Manipulación de varios plots en una imagen.
+library(gridExtra)
+
+# Análisis bayesiano
+library("rethinking")
+```
+
+Si no tiene instalada la librería “rethinking”, ejecute las siguientes líneas de código para instalar la librería:
+
+```{r, eval=FALSE}
+install.packages("rethinking")
+```
+
+En caso de tener problemas al momento de instalar la librería con el código anterior, utilice las siguiente chunk:
+
+
+```{r, eval=FALSE}
+install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+install.packages(c("mvtnorm","loo","coda","remotes","shape"), repos="https://cloud.r-project.org/",dependencies=TRUE)
+remotes::install_github("rmcelreath/rethinking")
+```
+
+
+### Pregunta 3: Regresión Lineal Bayesiana
+
+El objetivo de esta pregunta es introducirlo en la aplicación de una regresión bayesiana. Con esto, buscaremos entender como calcular una regresión bayesiana en base al "motor" aproximación de Laplace, revisando como se comporta la credibilidad de sus predicciones y como la regresión lineal puede llegar a mutar a aplicar una transformación en el vector $x$. Para responder esta pregunta centre su desarrollo solo en las clases y las funciones que nos brinda la librería `rethinking`.
+
+Unos expertos en alometría deciden realizar un estudio de las alturas de unos niños en un colegio, buscando generar un regresor lineal bayesiano capaz de predecir la altura en base al peso de los alumnos. Para realizar este trabajo recopilan los datos `table_height.csv`, quien posee observaciones fisiológicas de 192 alumnos.
+
+**Parte I**
+
+En conocimiento los datos recopilados por los expertos, le solicitan realizar la siguiente serie de tareas:
+
+- [ ] Defina un modelo de regresión bayesiana, definiendo sus propios priors. Comente cada una de sus asunciones y señale a través de ecuaciones el modelo. Para definir los priors puede ser interesante la información recopilada en el siguiente link: [Priors](https://stacks.cdc.gov/view/cdc/100478)
+- [ ] Ajuste el modelo lineal utilizando el método de Laplace approximation. Estudie a través del comando `precis` los resultados obtenidos y coméntelos.
+- [ ] Gráfique el MAP de regresión lineal obtenida, añadiendo al gráfico el intervalo del $95\%$ que se tiene sobre la media y los valores predecidos de la altura. Comente los resultados obtenidos y señale si su modelo logra ser un buen predictor de los valores estudiados.
+
+**Parte II**
+
+En base a los resultados obtenidos, el experto que trabaja con usted le señala que las alturas se suelen modelas con pesos logarítmicos, por lo que le sugiere añadir un logaritmo natural en el vector $x$ que compone su modelo lineal. Realice nuevamente la regresión utilizando un intervalo del $95\%$ sobre la media y los valores predecidos de la altura. Comente los resultados obtenidos, señalando si el modelo logra ajustar mejor los valores.
+
+**Respuesta:**
+
+> Respuesta Aquí
+
+**Bonus**
+
+Esta parte es opcional y contará como un puntaje adicional si la realizan, pero si no lo hacen no habrá penalización.
+
+Compare los resultados obtenidos con el método de Laplace con MCMC y comente los resultados. Para esto pueden utilizar ulam  del paquete rethinking.
+
+```{r, eval=FALSE}
+install.packages("rstan", repos = c("https://mc-stan.org/r-packages/", getOption("repos"))) #necesitarán instalar estas librerías
+install.packages("cmdstanr", repos = c("https://mc-stan.org/r-packages/", getOption("repos")))
+```
+
+```{r,eval=FALSE}
+# si no les funciona instalar cmdstan con lo anterior pueden probar con:
+check_cmdstan_toolchain(fix = TRUE)
+install_cmdstan()
+```
+
+
+> Respuesta Aquí
+
+#### **Pregunta 4:** MCMC
+
+El objetivo de esta pregunta es lograr samplear, mediante la técnica de MCMC, la distribución gamma. 
+
+En general la distribución gamma se denota por $\Gamma(\alpha,\beta)$ donde $\alpha$ y $\beta$ son parámetros positivos, a $\alpha$ se le suele llamar "shape" y a $\beta$ rate La densidad no normalizada de una distribución gamma esta dada por:
+
+$$
+f(x\mid \alpha,\beta) = 
+\begin{cases}
+ x^{\alpha -1}e^{-\beta x} ~ &\text{ si } x > 0\\
+0 ~&\text{si } x \leq 0
+\end{cases}
+$$
+
+- [ ] Implemente el algoritmo de metropolis hasting utilizando $q(\theta^{(t)} \mid \theta^{(t-1)}) = \mathcal{N}(\theta^{t-1},1)$, **importante** su función tiene que poder recibir:
+  - [ ] La condición inicial $\theta_{0}$.
+  - [ ] Cantidad de repeticiones.
+  - [ ] $\alpha$ y $\beta$.
+  
+  Escriba el algoritmo sin utilizar implementenaciones de la distribución gamma en r. 
+  
+De ahora en adelante considere $\alpha = 5$ y $\beta = \frac{1}{5}$.
+
+  - [ ] Considere $\theta_{0} = 1$, grafique el histograma que obtiene para distintas cantidad de repeticiones, entre sus pruebas tiene que tener al menos una que tenga del orden de $10^5$ repeticiones ¿Como cambia la distribución en funcion de las repeticiones?
+  - [ ] Considere distintos valores de $\theta_{0}$ y una cantidad de repeticiones grande (del orden de $10^5$), grafique las distribuciones que obtenga comente sus resultados  ¿es importante la condición inicial del algoritmo?.
+  - [ ] Utilizando $\theta_{0}$ y cantidad de repeticiones conveniente (de acuerdo a lo que obtuvo en las partes anteriores) compare con la distribución real. **Obs:** En esta parte puede utilizar la distribución gamma que tiene implementado r para comparar con lo que usted realizo.
+
+**Respuesta:**
+
+> Respuesta Aquí
+
+&nbsp;
+<hr />
+<p style="text-align: center;">A work by <a href="https://github.com/dccuchile/CC6104">CC6104</a></p>
+
+<!-- Add icon library -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.1/css/all.css">
+
+<!-- Add font awesome icons -->
+<p style="text-align: center;">
+    <a href="https://github.com/dccuchile/CC6104"><i class="fab fa-github" style='font-size:30px'></i></a>
+</p>
+
+<p style="text-align: center;">
+    <a href="https://discord.gg/XCbQvGs3Uf"><i class="fab fa-discord" style='font-size:30px'></i></a>
+</p>
+
+&nbsp;
