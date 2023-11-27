@@ -372,18 +372,22 @@ Usted sabe un dato extra sobre la información, los valores de $\sigma$ en la gr
 - [ ] Modifique el siguiente código que permite realizar una grid approximation para $2$ parámetros. Proponga priors para $\mu$ y $\sigma$, justifique su elección.
 
 
-```r
+```{r}
 # Leer información
 data_notas <- read.csv("notas.csv")
 
 # Función para crear likelihood dado mu y sigma
 grid_function <- function(mu,sigma){
-   .... # Funcion de likelihood
+   prod(dnorm(data_notas$Notas, mean = mu, sd = sigma))
 }
 
 # Valores de la grilla
-grid_mu <- ...
-grid_sigma <- ...
+#Se escogen estos valores ya que las notas van desde 1 a 7 en chile
+grid_mu <- seq(from = 1.0, to = 7.0, length.out = 100)
+
+#Se escoge este valor ya que los valores en la grilla se mueven en el intervalo [0.5,1.5]
+grid_sigma <- seq(from = 0.5, to = 1.5, length.out = 100)
+
 
 # Se crea la grilla 2d
 data_grid <- expand_grid(grid_mu,grid_sigma)
@@ -396,8 +400,8 @@ data_grid <- unnest(data_grid,cols = c("likelihood"))
 
 
 # Valores de los priors
-prior_mu <- ...
-prior_sigma <-  ...
+prior_mu <- rep(1, 100)
+prior_sigma <-  rep(0.75, 100)
 
 # Se crea la grilla 2d de priors
 prior <- expand_grid(prior_mu,prior_sigma)
@@ -420,12 +424,12 @@ data_grid$posterior <- (data_grid$posterior - min(data_grid$posterior))/(max(dat
 - [ ] Tras haber ejecutado el código de la parte anterior ejecute el siguiente, ¿Que puede decir de los valores de la distribución? Se recomienda hacer modificaciones en el código para realizar un mejor análisis y estudio.
 
 
-```r
+```{r}
 # Punto de referencia
 # Se recomienda cambiar estos valores por unos adecuados que le permitan estudiar
 # Los valores de la distribución de mejor manera
-valor_x <- 1
-valor_y <- 1
+valor_x <- 6.0
+valor_y <- 0.6
 
 # Grafico
 
@@ -459,7 +463,7 @@ plt
 - [ ] A continuación se presenta un código que permite realizara la distribución dada por sampling from grid approximation ¿Para que sirve este proceso? ¿Que puede deducir del gráfico?
 
 
-```r
+```{r}
 # Codificamos los datos
 x <- 1:length(data_grid$posterior)
 
@@ -478,6 +482,9 @@ dens(df)
 
 > Respuesta Aqui
 
+Para responder la pregunta de la parte 2, se tiene que en este caso, el punto de calor se bastante centrado en las coordenadas (6.0, 0.6), lo que significa que, según el análisis bayesiano realizado, esos valores son los más probables para $\mu$ y $\sigma$,siendo 6.0 $\mu$ en la distribucion de notas y 0,6 la desviacion estandar $\sigma$ de las notas, por lo cual es bastante probable que encontremos la gran mayoria de las notas en esta zona.
+
+Finalmente para la parte 3, este proceso sirve para obtener muestras de la distribución luego de realizar una aproximacion de grillas, lo que ayuda a la comprensión de la variabilidad y la forma de la distribución, ya que la forma de grillas es discreta y esta forma es continua. Y lo que se puede deducir del grafico es que tal como vimos previamente los valores se centran en 6.05 siendo este $\mu$ y se distribuyen como campana, a su vez vemos como el valor de $\sigma$ tambien es aproximadamente 0.6 aqui notamos que este esta un poco hacia la izquierda lo cual concuerda con lo pensado previamente en el principio del problema, todo esto habia sido descrito previamente con el mapa de calor. Hay que notar que existe un grado de incertidumbre en este caso, ya que los valores al ser discretos, se forman valles dentro de nuestro grafico de densidad, por lo que aunque tenga la forma de campana, hay valores dentro de este que es probable no encontrar.
 
 &nbsp;
 <hr />
