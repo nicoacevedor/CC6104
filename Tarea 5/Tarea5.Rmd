@@ -77,7 +77,19 @@ Documentación:
 
 Explique cómo cross-validation, criterios de información y regularización ayudan a mitigar o medir los problemas de underfitting y overfitting.
 
-> *Respuesta*
+> **Cross-Validation** 
+
+La `cross-validation` divide los datos de entrenamiento en $k$ subconjuntos, entrenando el modelo $k$ veces, siempre dejando uno de los subconjuntos fuera. Esto logra que el modelo no se ajuste a unos datos en particular, sino que aprenda de mejor manera de todos los datos. 
+
+> **Criterios de Información**
+
+Los `criterios de información` permiten, de cierta forma, medir cuanto overfitting o underfitting tienen distintos modelos entrenados con los mismos datos. Esto permite comparar distintos modelos para ver cual es el que se comporta mejor. Aún así, esto no resuelve el problema de overfitting, solo lo mide, ya que estas medidas mejoran en general mientras más complejo (y por lo tanto, más ajustado) es el modelo a los datos.
+
+>**Regularización**
+
+La `regularización` permite mantener los parámetros del modelo controlados al agregar una penalización en la función objetivo a qué tan grande sean estos parámetros. Esto es controlado por una constante $\lambda \in [0,1]$ que controla la cantidad de overfitting del modelo. En general, penalizar tanto los parámetros genera un riesgo de underfitting, ya que no permite que los parámetros crezcan lo suficiente, por eso se suele ajustar usando datos de validación.
+
+
 
 
 ### Pregunta 2: Directed Graphical Models	
@@ -196,7 +208,53 @@ De ahora en adelante considere $\alpha = 5$ y $\beta = \frac{1}{5}$.
 
 **Respuesta:**
 
-> Respuesta Aquí
+Primero, definimos la función `metropolis` la cual nos va a permitir calcular lo pedido
+
+```{r}
+metropolis <- function(theta_0, n_iter, alpha, beta) {
+  theta <- vector(length = n_iter + 1)
+  current <- theta_0
+  for (k in 1:n_iter + 1) {
+    theta[k] <- current
+    # Obtenemos el valor propuesto usando la distribución normal
+    proposal <- rnorm(1, mean = theta[k], sd = 1)
+    # Valor de la densidad gamma para este valor propuesto
+    prob_prop <- pgamma(proposal, shape = alpha, rate = beta)
+    # Probabilidad para el valor actual
+    prob_current <- pgamma(current, shape = alpha, rate = beta)
+    # Proporción entre ambas probabilidades
+    ratio <- prob_prop / prob_current
+    # Probabilidad de aceptar el nuevo valor
+    prob <- min(1, ratio)
+    # Decisión sobre si aceptar el nuevo valor o no
+    decision <- rbinom(1, 1, prob)
+    # Actualización del valor
+    current <- ifelse(decision == 1, proposal, current)
+  }
+  # Devolvemos theta_1 a theta_(n+1), dando n valores
+  return(theta[-1])
+}
+```
+
+Antes de graficar, graficaremos la función de densidad gamma usando la función nativa de `R` `rgamma`. Para esto, generaremos $10^6$ elementos aleatorios considerando $\alpha = 5$ y $\beta = \frac{1}{5} = 0.2$
+```{r}
+# Distribución no normalizada
+gamma_vect <- rgamma(1e6, shape = 5, rate = 0.2) * gamma(5)
+hist(gamma_vect)
+```
+
+Ahora, graficamos el histograma para la cantidad de valores $10^1$, $10^2$, $10^3$, $10^4$, $10^5$ y $10^6$, considerando $\theta_0 = 1$ 
+
+```{r}
+hist(metropolis(1, 1e1, 5, 0.2))
+hist(metropolis(1, 1e2, 5, 0.2))
+hist(metropolis(1, 1e3, 5, 0.2))
+hist(metropolis(1, 1e4, 5, 0.2))
+hist(metropolis(1, 1e5, 5, 0.2))
+hist(metropolis(1, 1e6, 5, 0.2))
+```
+
+Notemos que ninguno se parece realmente a la distribución gamma. Algunas veces, para valores más altos de muestras, como $10^5$ o $10^6$ generan una forma un poco similar, pero realmente no es la distribución gamma.
 
 &nbsp;
 <hr />
