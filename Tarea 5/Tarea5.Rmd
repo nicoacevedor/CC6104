@@ -96,14 +96,54 @@ La `regularización` permite mantener los parámetros del modelo controlados al 
 
 Diseñe una DAG para un problema causal inventado por usted de al menos 5 nodos (puede basarse en el ejemplo de Eugene Charniak) usando Dagitty y considere que la DAG tenga al menos: una chain, un fork y un collider. Muestre con dagitty todas las independencias condicionales de su DAG. Explique las independencias usando las reglas de d-separación.
 
+```{r, eval=FALSE}
+install.packages(dagitty)
+```
+
 > *Respuesta*
+
+Supongamos que estamos modelando la relación entre el clima, la cantidad de ejercicio, el estado de ánimo, el nivel de energía y la productividad diaria.
+
+Clima: Representa el clima del día.
+Ejercicio: Indica la cantidad de ejercicio realizado.
+Estado de Ánimo: Representa el estado de ánimo del individuo.
+Energía: Nivel de energía.
+Productividad: Nivel de productividad diaria.
+
+```{r}
+library(dagitty)
+
+dag <- dagitty("dag {
+  Clima -> Ejercicio 
+  Ejercicio -> Energia
+  Clima -> Estado_de_Animo 
+  Productividad -> Estado_de_Animo 
+  Productividad -> Energia
+}")
+
+
+# Visualización del DAG
+plot(dag)
+
+```
+Chain (C -> E -> N):
+
+El clima (C) y la energía (N) son d-separados dado el ejercicio (E). Conociendo la cantidad de ejercicio realizada, el clima no proporciona información adicional sobre la energía, y viceversa.
+
+Fork (M -> P <- N):
+
+El estado de ánimo (M) y el nivel de energía (N) son d-separados dado la productividad (P). Si conocemos la productividad, el estado de ánimo y la energía son condicionalmente independientes entre sí.
+
+Collider (M -> P <- E):
+
+El estado de ánimo (M) y el ejercicio (E) no son d-separados dado la productividad (P). En este caso, si conocemos la productividad, el estado de ánimo y el ejercicio están condicionalmente dependientes entre sí.
 
 
 En la siguiente sección deberá resolver cada uno de los experimentos computacionales a través de la programación en R. Para esto se le aconseja que cree funciones en R, ya que le facilitará la ejecución de gran parte de lo solicitado.
 
 Para el desarrollo preste mucha atención en los enunciados, ya que se le solicitará la implementación de métodos sin uso de funciones predefinidas. Por otro lado, Las librerías permitidas para desarrollar de la tarea 4 son las siguientes:
 
-```{r, eval=FALSE}
+```{r}
 # Manipulación de estructuras
 library(tidyverse)
 library(dplyr)
@@ -151,13 +191,173 @@ En conocimiento los datos recopilados por los expertos, le solicitan realizar la
 - [ ] Ajuste el modelo lineal utilizando el método de Laplace approximation. Estudie a través del comando `precis` los resultados obtenidos y coméntelos.
 - [ ] Gráfique el MAP de regresión lineal obtenida, añadiendo al gráfico el intervalo del $95\%$ que se tiene sobre la media y los valores predecidos de la altura. Comente los resultados obtenidos y señale si su modelo logra ser un buen predictor de los valores estudiados.
 
+```{r}
+
+# Cargamos los datos
+data <- read.csv("table_height.csv")
+
+hist(data$age)
+hist(data$height)
+hist(data$weight)
+
+#para la creacion de los priors, encontraremos hacia donde se aproxima la altura
+print('Mean')
+print(mean(data$height)) #media para el b0
+
+print('Standard deviation')
+print(sd(data$height)) #desviacion estandar para el b0
+
+```
+
+
+
+
+```{r}
+# Definimos el modelo de regresión bayesiana con priors
+model <- quap(
+  alist(
+    height ~ dnorm(mu, sigma),  # Likelihood
+    mu <- b0 + b1 * weight,       # Modelo lineal
+    b0 ~ dnorm(108, 25),         # Prior para intercepto
+    b1 ~ dnorm(0, 1),           # Prior para pendiente
+    sigma ~ dunif(0, 25)        # Prior para desviación estándar
+  ),
+  data = data
+)
+
+# Ajustamos el modelo con Laplace approximation
+precis(model, prob = 0.95)
+
+```
+
+Vemos que el promedio de b0 es 58.62cm y b1 aumenta 2.7cm por cada kilo.
+
+
+```{r}
+# Extraemos los parámetros del modelo
+posterior_samples <- extract.samples(model)
+
+weight_seq <- seq(from=4 , to=50 , by=1 )
+# MAP
+map <- link(model, data = list(weight = weight_seq))
+
+# Simulamos alturas no promedio
+height_sim <- function(weight) {
+  rnorm(
+    n = nrow(posterior_samples),
+    mean = posterior_samples$b0 + posterior_samples$b1 * weight,
+    sd = posterior_samples$sigma
+  )
+}
+
+simulated_heights <- sapply(weight_seq, height_sim)
+
+
+# Calculamos intervalos de HPDI
+height.HPDI <- apply(simulated_heights, 2, HPDI, prob = 0.95)
+
+# Plot de los datos crudos
+plot(data$weight, data$height, col = rgb(0, 0, 0, 0.5), xlab = "Weight", ylab = "Height")
+
+# Dibujamos la línea MAP
+lines(weight_seq, apply(map, 2, mean), col = "blue", lwd = 2)
+
+
+# Dibujamos el intervalo HPDI para la línea
+shade(apply(map, 2, HPDI, prob = 0.95), weight_seq, col = rgb(0, 0, 1, 0.2))
+
+# Dibujamos el intervalo HPDI para alturas simuladas
+shade(height.HPDI, weight_seq, col = rgb(1, 0, 0, 0.2))
+
+# Añadimos detalles al gráfico
+legend("topright", legend = c("MAP Line", "HPDI", "HPDI Simulated Heights"),
+       col = c("blue", rgb(0, 0, 1, 0.2), rgb(1, 0, 0, 0.2)), lwd = c(2, 0, 0), pch = c(NA, NA, NA))
+
+
+```
+Vemos que los valores de peso vs altura siguen una tendencia de estar cerca de la linea central, los limites de la sombra encierran a la gran mayoria de los datos, y la linearidad se observa en esto
 **Parte II**
 
 En base a los resultados obtenidos, el experto que trabaja con usted le señala que las alturas se suelen modelas con pesos logarítmicos, por lo que le sugiere añadir un logaritmo natural en el vector $x$ que compone su modelo lineal. Realice nuevamente la regresión utilizando un intervalo del $95\%$ sobre la media y los valores predecidos de la altura. Comente los resultados obtenidos, señalando si el modelo logra ajustar mejor los valores.
 
 **Respuesta:**
 
-> Respuesta Aquí
+Tenemos que realizar todo lo que hicimos previamente, asi que me saltare bastantes pasos:
+
+```{r}
+data$weight <- log(data$weight)
+
+hist(data$weight)
+```
+
+```{r, eval = TRUE}
+#para la creacion de los priors
+print('Mean')
+print(mean(data$weight)) #media para el b0
+
+print('Standard deviation')
+print(sd(data$weight)) #desviacion estandar para el b0
+
+```
+
+```{r}
+# Definimos el modelo de regresión bayesiana con priors
+model <- quap(
+  alist(
+    height ~ dnorm(mu, sigma),  # Likelihood
+    mu <- b0 + b1 * weight,       # Modelo lineal
+    b0 ~ dnorm(108, 25),         # Prior para intercepto
+    b1 ~ dnorm(20, 10),           # Prior para pendiente
+    sigma ~ dunif(0, 25)        # Prior para desviación estándar
+  ),
+  data = data
+)
+
+posterior_samples <- extract.samples(model)
+
+weight_seq <- seq(from=0.6 , to=log(50) , by=0.4 )
+# MAP
+map <- link(model, data = list(weight = weight_seq))
+
+# Simulamos alturas no promedio
+height_sim <- function(weight) {
+  rnorm(
+    n = nrow(posterior_samples),
+    mean = posterior_samples$b0 + posterior_samples$b1 * weight,
+    sd = posterior_samples$sigma
+  )
+}
+
+simulated_heights <- sapply(weight_seq, height_sim)
+
+
+# Calculamos intervalos de HPDI
+height.HPDI <- apply(simulated_heights, 2, HPDI, prob = 0.95)
+
+# Plot de los datos crudos
+plot(data$weight, data$height, col = rgb(0, 0, 0, 0.5), xlab = "Weight", ylab = "Height")
+
+# Dibujamos la línea MAP
+lines(weight_seq, apply(map, 2, mean), col = "blue", lwd = 2)
+
+
+# Dibujamos el intervalo HPDI para la línea
+shade(apply(map, 2, HPDI, prob = 0.95), weight_seq, col = rgb(0, 0, 1, 0.2))
+
+# Dibujamos el intervalo HPDI para alturas simuladas
+shade(height.HPDI, weight_seq, col = rgb(1, 0, 0, 0.2))
+
+# Añadimos detalles al gráfico
+legend("topright", legend = c("MAP Line", "HPDI", "HPDI Simulated Heights"),
+       col = c("blue", rgb(0, 0, 1, 0.2), rgb(1, 0, 0, 0.2)), lwd = c(2, 0, 0), pch = c(NA, NA, NA))
+
+```
+Podemos notar que al realizar este proceso logaritmico los resultados obtenidos son más consistentes con la regresion lineal, ya que estos se concentran más dentro de la linea y su sombra
+
+
+
+
+
 
 **Bonus**
 
